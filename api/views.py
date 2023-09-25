@@ -4,9 +4,11 @@ import json
 
 from django.http import JsonResponse, HttpResponse
 from rest_framework.parsers import JSONParser
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
 
 from api.models import Person
-from api.serializers import CreatePersonSerializer
+from api.serializers import CreatePersonSerializer, CreateUserSerializer
 from products.models import Product
 from django.forms.models import model_to_dict
 from rest_framework.response import Response
@@ -66,6 +68,35 @@ def reset_tests(request, *args, **kwargs):
         }, status=500)
 
 @api_view(["POST"])
+def reset_tests_security(request, *args, **kwargs):
+    try:
+        default_db = DATABASES["default"]
+        connection = psycopg2.connect(
+            database=default_db["NAME"],
+            user=default_db["USER"],
+            host=default_db["HOST"],
+            port=default_db["PORT"],
+            password=default_db["PASSWORD"]
+        )
+        cursor = connection.cursor()
+        cursor.execute("delete from auth_user where is_superuser = false")
+        cursor.close()
+        connection.commit()
+        return JsonResponse({
+            "message": "success"
+        }, status=200)
+    except KeyError as ke:
+        return JsonResponse({
+            "message": "failure",
+            "error": f"error connecting to database, db connection details: {ke}"
+        }, status=500)
+    except psycopg2.Error as e:
+        return JsonResponse({
+            "message": "failure",
+            "error": f"{e}"
+        }, status=500)
+
+@api_view(["POST"])
 def persons(request, *args, **kwargs):
     if request.method == 'POST':
         body = request.body
@@ -84,3 +115,25 @@ def persons(request, *args, **kwargs):
     return JsonResponse({
         "message": "success"
     }, status=200)
+
+
+@api_view(["POST"])
+def users(request, *args, **kwargs):
+    if request.method == 'POST':
+        body = request.body
+        new_user = JSONParser().parse(io.BytesIO(body))
+        new_user['password'] = make_password(new_user['password'])
+        serializer = CreateUserSerializer(data=new_user)
+        if serializer.is_valid():
+            User.objects.create(**serializer.validated_data)
+            return JsonResponse({
+                "message": "success",
+                "created": serializer.validated_data
+            }, status=201)
+        else:
+            return JsonResponse({
+                "message": "failure: minimum object field requirements not met"
+            }, status=400)
+    return JsonResponse({
+        "message": "failure"
+    }, status=404)

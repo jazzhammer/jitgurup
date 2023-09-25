@@ -1,5 +1,5 @@
-from __tests__.e2e.api.person.test_post import resetTests, testAll
+from __tests__.e2e.api.person.test_post import testResetTests, testAll
 
-resetTests()
+testResetTests()
 testAll()
 
