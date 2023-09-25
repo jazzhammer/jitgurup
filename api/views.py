@@ -1,15 +1,11 @@
 import http
 import io
-import json
-
-from django.http import JsonResponse, HttpResponse
 from rest_framework.parsers import JSONParser
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 
 from api.models import Person
 from api.serializers import CreatePersonSerializer, CreateUserSerializer
-from products.models import Product
 from django.forms.models import model_to_dict
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -18,6 +14,7 @@ from django.http import JsonResponse
 
 import psycopg2
 from jitgurup.settings import DATABASES
+
 
 @api_view(["POST"])
 def api_home(request, *args, **kwargs):
@@ -33,6 +30,7 @@ def api_home(request, *args, **kwargs):
 
     # return JsonResponse(data)
 
+
 @api_view(["POST"])
 def reset_tests(request, *args, **kwargs):
     print("reset_tests(request, *args, **kwargs):")
@@ -46,11 +44,11 @@ def reset_tests(request, *args, **kwargs):
             password=default_db["PASSWORD"]
         )
         cursor = connection.cursor()
-        cursor.execute("delete from api_meetup")
-        cursor.execute("delete from api_meetuprole")
-        cursor.execute("delete from api_person")
-        cursor.execute("delete from api_profession")
-        cursor.execute("delete from api_showup")
+        cursor.execute("truncate api_meetup")
+        cursor.execute("truncate api_meetuprole")
+        cursor.execute("truncate api_person")
+        cursor.execute("truncate api_profession")
+        cursor.execute("truncate api_showup")
         cursor.close()
         connection.commit()
         return JsonResponse({
@@ -66,6 +64,7 @@ def reset_tests(request, *args, **kwargs):
             "message": "failure",
             "error": f"{e}"
         }, status=500)
+
 
 @api_view(["POST"])
 def reset_tests_security(request, *args, **kwargs):
@@ -96,6 +95,7 @@ def reset_tests_security(request, *args, **kwargs):
             "error": f"{e}"
         }, status=500)
 
+
 @api_view(["POST"])
 def persons(request, *args, **kwargs):
     if request.method == 'POST':
@@ -122,6 +122,23 @@ def users(request, *args, **kwargs):
     if request.method == 'POST':
         body = request.body
         new_user = JSONParser().parse(io.BytesIO(body))
+        # if only a username, check dupe for existing username
+        if 'username' in new_user:
+            if len(new_user) == 1:
+                found = User.objects.filter(username=new_user['username']).first()
+                if found is None:
+                    return JsonResponse({
+                        "message": f"found no User matching username {new_user['username']}"
+                    })
+                else:
+                    serialized = model_to_dict(
+                        found, fields=[field.name for field in found._meta.fields if field.name != 'password']
+                    )
+                    return JsonResponse({
+                        "message": f"found one User matching username {new_user['username']}",
+                        "matched": serialized
+                    }, status=200)
+        # else proceed
         new_user['password'] = make_password(new_user['password'])
         serializer = CreateUserSerializer(data=new_user)
         if serializer.is_valid():
@@ -134,6 +151,7 @@ def users(request, *args, **kwargs):
             return JsonResponse({
                 "message": "failure: minimum object field requirements not met"
             }, status=400)
+
     return JsonResponse({
         "message": "failure"
     }, status=404)
