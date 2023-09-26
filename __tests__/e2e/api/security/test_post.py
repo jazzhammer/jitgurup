@@ -18,7 +18,7 @@ def createUser():
             "last_name": "gorgon III",
             "first_name": "luis",
             "username": "gorgonhasspoken",
-            "password": "ilovetospeak",
+            "password": "ilovehammertime",
             "email": "live@jazzhammer.com"
         }
     )
@@ -40,10 +40,35 @@ def findUsername():
         }
     )
     json = response.json()
-    print(f"findUsername json: {json}")
+    matched = json['matched']
+    assert matched is not None
+    assert matched["last_name"] == "gorgon III"
+    assert matched["first_name"] == "luis"
+    assert matched["username"] == "gorgonhasspoken"
+    assert matched["email"] == "live@jazzhammer.com"
+
+
+def authenticate():
+    resetTests()
+    createUser()
+    response = requests.post(
+        f"{API_BASE_URL}/users",
+        json={
+            "username": "gorgonhasspoken",
+            "password": "ilovehammertime"
+        }
+    )
+    json = response.json()
+    matched = json['authenticated']
+    assert matched is not None
+    assert matched["last_name"] == "gorgon III"
+    assert matched["first_name"] == "luis"
+    assert matched["username"] == "gorgonhasspoken"
+    assert matched["email"] == "live@jazzhammer.com"
 
 def testAll():
-    findUsername()
+    authenticate()
+    # findUsername()
     # createUser()
 
 # resetTests()

@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from products.serializers import ProductSerializer
 from django.http import JsonResponse
-
+from django.contrib.auth import authenticate
 import psycopg2
 from jitgurup.settings import DATABASES
 
@@ -121,28 +121,54 @@ def persons(request, *args, **kwargs):
 def users(request, *args, **kwargs):
     if request.method == 'POST':
         body = request.body
-        new_user = JSONParser().parse(io.BytesIO(body))
+        creds = JSONParser().parse(io.BytesIO(body))
         # if only a username, check dupe for existing username
-        if 'username' in new_user:
-            if len(new_user) == 1:
-                found = User.objects.filter(username=new_user['username']).first()
+        if 'username' in creds:
+            if len(creds) == 1:
+                found = User.objects.filter(username=creds['username']).first()
                 if found is None:
                     return JsonResponse({
-                        "message": f"found no User matching username {new_user['username']}"
+                        "message": f"found no User matching username {creds['username']}"
                     })
                 else:
                     serialized = model_to_dict(
                         found, fields=[field.name for field in found._meta.fields if field.name != 'password']
                     )
                     return JsonResponse({
-                        "message": f"found one User matching username {new_user['username']}",
+                        "message": f"found one User matching username {creds['username']}",
                         "matched": serialized
                     }, status=200)
-        # else proceed
-        new_user['password'] = make_password(new_user['password'])
-        serializer = CreateUserSerializer(data=new_user)
+            elif len(creds) == 2:
+                if 'password' in creds:
+                    # authenticate
+
+                    # hashed = make_password(creds['password'])
+                    found = authenticate(username=creds['username'], password=creds['password'])
+                    if found is None:
+                        return JsonResponse({
+                            "message": "no user found matching credentials provided"
+                        })
+                    else:
+                        serialized = model_to_dict(
+                            found,
+                            fields=[field.name for field in found._meta.fields if field.name != 'password']
+                        )
+                        return JsonResponse({
+                            "message": "user found matching credentials provided",
+                            "authenticated": serialized
+                        })
+        # else proceed to create user row
+        serializer = CreateUserSerializer(data=creds)
         if serializer.is_valid():
-            User.objects.create(**serializer.validated_data)
+
+            user = User.objects.create_user(
+                serializer.validated_data['username'],
+                serializer.validated_data['email'],
+                serializer.validated_data['password']
+            )
+            user.last_name = serializer.validated_data['last_name']
+            user.first_name = serializer.validated_data['first_name']
+            user.save()
             return JsonResponse({
                 "message": "success",
                 "created": serializer.validated_data
