@@ -18,6 +18,7 @@ class ApiConfig(AppConfig):
         print(f"------------------------------------------------------------")
 
         self.confirmDefaultUser()
+        self.confirmDefaultOrgs()
 
     def confirmDefaultUser(self):
         print(f"confirmDefaultUser...")
@@ -31,4 +32,32 @@ class ApiConfig(AppConfig):
                 created.is_staff = True
                 created.last_name = 'jitguru'
                 created.first_name = 'admin'
+                created.save()
+
+    def confirmDefaultOrgs(self):
+        print(f"confirmDefaultOrgs...")
+        from .models import Org
+
+        found = Org.objects.filter(name='jitguru:community').first()
+        if found == None:
+            created = Org.objects.create(name='jitguru:community')
+            if created is not None:
+                print(f"created org: {created.name}")
+                created.description = "demonstrates distributed instruction and learning without a facility"
+                created.save()
+
+        found = Org.objects.filter(name='jitguru:facility').first()
+        if found == None:
+            created = Org.objects.create(name='jitguru:facility')
+            if created is not None:
+                print(f"created org: {created.name}")
+                created.description = "demonstrates distributed instruction and learning centered in one physical faciliity"
+                created.save()
+
+        found = Org.objects.filter(name='jitguru:multifacility').first()
+        if found == None:
+            created = Org.objects.create(name='jitguru:multifacility')
+            if created is not None:
+                print(f"created org: {created.name}")
+                created.description = "demonstrates distributed instruction and learning centered more than one physical faciliity"
                 created.save()

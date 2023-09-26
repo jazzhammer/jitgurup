@@ -169,6 +169,8 @@ def users(request, *args, **kwargs):
             user.last_name = serializer.validated_data['last_name']
             user.first_name = serializer.validated_data['first_name']
             user.save()
+
+            # create default Person for this user
             return JsonResponse({
                 "message": "success",
                 "created": serializer.validated_data
