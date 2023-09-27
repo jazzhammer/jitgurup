@@ -29,6 +29,21 @@ def createUser():
     assert created['first_name'] == 'luis'
     assert created['email'] == 'live@jazzhammer.com'
 
+def getUserOrgs():
+    resetTests()
+    response = requests.post(f"{API_BASE_URL}/seed/default_users")
+    response = requests.post(f"{API_BASE_URL}/seed/default_orgs")
+    response = requests.post(f"{API_BASE_URL}/seed/default_user_orgs")
+    response = requests.post(f"{API_BASE_URL}/users",
+                  json={
+                      "username": "jitguruadmin",
+                      "password": "ilovethejitguru"
+                  })
+    userJson = response.json()
+    response = requests.get(f"{API_BASE_URL}/users/orgs?user_id={userJson['authenticated']['id']}")
+    userOrgsJson = response.json()
+    print(f"userOrgsJson: {userOrgsJson}")
+    assert len(userOrgsJson['assigned']) == 3
 
 def findUsername():
     resetTests()
@@ -67,7 +82,8 @@ def authenticate():
     assert matched["email"] == "live@jazzhammer.com"
 
 def testAll():
-    authenticate()
+    getUserOrgs()
+    # authenticate()
     # findUsername()
     # createUser()
 

@@ -14,6 +14,7 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate
 import psycopg2
 from jitgurup.settings import DATABASES
+from api.apps import AppConfig
 
 
 @api_view(["POST"])
@@ -184,3 +185,117 @@ def users(request, *args, **kwargs):
     return JsonResponse({
         "message": "failure"
     }, status=404)
+
+def confirmDefaultUser():
+    print(f"confirmDefaultUser...")
+    from django.contrib.auth.models import User
+    found = User.objects.filter(username="jitguruadmin").first()
+    if found is None:
+        created = User.objects.create_user("jitguruadmin", "admin@jitguru.com", "ilovethejitguru")
+        if created is not None:
+            print(f"created default user: {created.username}")
+            created.is_superuser = True
+            created.is_staff = True
+            created.last_name = 'jitguru'
+            created.first_name = 'admin'
+            created.save()
+            found = User.objects.filter(username="jitguruadmin").first()
+            return found
+    else:
+        return model_to_dict(found, fields=[field.name for field in found._meta.fields])
+
+@api_view(["POST"])
+def seed_default_users(request, *args, **kwargs):
+    confirmed = confirmDefaultUser()
+    return Response({
+        "message": "success",
+        "seeded": [confirmed]
+    }, status=200)
+
+def confirmDefaultOrgs():
+    print(f"confirmDefaultOrgs...")
+    from .models import Org
+    defaultOrgs = []
+    found = Org.objects.filter(name='jitguru:community').first()
+    if found == None:
+        created = Org.objects.create(name='jitguru:community')
+        if created is not None:
+            print(f"created org: {created.name}")
+            created.description = "demonstrates distributed instruction and learning without a facility"
+            created.save()
+            found = Org.objects.filter(name='jitguru:community').first()
+    defaultOrgs.append(model_to_dict(found, fields=[field.name for field in found._meta.fields]))
+
+    found = Org.objects.filter(name='jitguru:facility').first()
+    if found == None:
+        created = Org.objects.create(name='jitguru:facility')
+        if created is not None:
+            print(f"created org: {created.name}")
+            created.description = "demonstrates distributed instruction and learning centered in one physical faciliity"
+            created.save()
+            found = Org.objects.filter(name='jitguru:facility').first()
+    defaultOrgs.append(model_to_dict(found, fields=[field.name for field in found._meta.fields]))
+
+    found = Org.objects.filter(name='jitguru:multifacility').first()
+    if found == None:
+        created = Org.objects.create(name='jitguru:multifacility')
+        if created is not None:
+            print(f"created org: {created.name}")
+            created.description = "demonstrates distributed instruction and learning centered more than one physical faciliity"
+            created.save()
+            found = Org.objects.filter(name='jitguru:multifacility').first()
+    defaultOrgs.append(model_to_dict(found, fields=[field.name for field in found._meta.fields]))
+    return defaultOrgs
+
+@api_view(["POST"])
+def seed_default_orgs(request, *args, **kwargs):
+    confirmedOrgs = confirmDefaultOrgs()
+    return Response({
+        "message": "success",
+        "seeded": confirmedOrgs
+    }, status=200)
+
+
+def confirmUserOrgs():
+    print(f"confirmUserOrgs()...")
+    from .models import UserOrg
+    from .models import Org
+    from django.contrib.auth.models import User
+
+    admin = User.objects.filter(username='jitguruadmin').first()
+    userOrgs = []
+
+    orgCommunity = Org.objects.filter(name='jitguru:community').first()
+    orgCommunityDict = model_to_dict(orgCommunity, fields=[field.name for field in orgCommunity._meta.fields])
+    userOrg = UserOrg.objects.filter(org_id=orgCommunityDict["id"], user_id=admin.id).first()
+    if userOrg is None:
+        UserOrg.objects.create(user_id=admin.id, org_id=orgCommunityDict["id"])
+        userOrg = UserOrg.objects.filter(org_id=orgCommunityDict["id"], user_id=admin.id).first()
+    userOrgs.append(userOrg)
+
+    orgFacility = Org.objects.filter(name='jitguru:facility').first()
+    orgFacilityDict = model_to_dict(orgFacility, fields=[field.name for field in orgFacility._meta.fields])
+    userOrg = UserOrg.objects.filter(org_id=orgFacilityDict["id"], user_id=admin.id).first()
+    if userOrg is None:
+        UserOrg.objects.create(user_id=admin.id, org_id=orgFacilityDict["id"])
+        userOrg = UserOrg.objects.filter(org_id=orgFacilityDict["id"], user_id=admin.id).first()
+    userOrgs.append(userOrg)
+
+    orgMultifacility = Org.objects.filter(name='jitguru:multifacility').first()
+    orgMultifacilityDict = model_to_dict(orgMultifacility,
+                                         fields=[field.name for field in orgMultifacility._meta.fields])
+    userOrg = UserOrg.objects.filter(org_id=orgMultifacilityDict["id"], user_id=admin.id).first()
+    if userOrg is None:
+        UserOrg.objects.create(user_id=admin.id, org_id=orgMultifacilityDict["id"])
+        userOrg = UserOrg.objects.filter(org_id=orgMultifacilityDict["id"], user_id=admin.id).first()
+    userOrgs.append(userOrg)
+
+    return [model_to_dict(userOrg, fields=[field.name for field in userOrg._meta.fields]) for userOrg in userOrgs]
+
+@api_view(["POST"])
+def seed_default_user_orgs(request, *args, **kwargs):
+    confirmed = confirmUserOrgs()
+    return JsonResponse({
+        "message": "success",
+        "seeded": confirmed
+    }, status=200)
