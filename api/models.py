@@ -35,6 +35,15 @@ class UserPerson(models.Model):
         indexes = [
             models.Index(fields=['user_id', 'person_id'], name='user_person_idx')
         ]
+
+class UserOrg(models.Model):
+    user_id = models.IntegerField()
+    org_id = models.IntegerField()
+    class Meta:
+        indexes = [
+            models.Index(fields=['user_id', 'org_id'], name='user_org_idx')
+        ]
+
 class MeetUp(models.Model):
     start_at = models.DateTimeField()
     duration = models.IntegerField()

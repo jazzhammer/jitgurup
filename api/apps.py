@@ -19,6 +19,44 @@ class ApiConfig(AppConfig):
 
         self.confirmDefaultUser()
         self.confirmDefaultOrgs()
+        self.confirmDefaultGroups()
+        self.confirmDefaultPermissions()
+        self.confirmDefaultGroupPermissions()
+
+    def confirmDefaultGroupPermissions(self):
+        print(f"confirmDefaultGroupPermissions()...")
+        from django.contrib.auth.models import Group
+        from django.contrib.auth.models import Permission
+        from django.contrib.auth.models import User
+        admins = Group.objects.filter(name="admins").first()
+        assign_org_to_self = Permission.objects.filter(codename="assign_org_to_self").first()
+        admin = User.objects.filter(username="jitguruadmin").first()
+        admins.permissions.add(assign_org_to_self)
+        admin.groups.add(admins)
+
+    def confirmDefaultPermissions(self):
+        print(f"confirmDefaultPermissions()...")
+        from django.contrib.auth.models import Permission
+        found = Permission.objects.filter(codename="assign_org_to_self").first()
+        if found is None:
+            created = Permission.objects.create(codename="assign_org_to_self", content_type_id=17, name="Can assign org to self")
+            if created is not None:
+                print(f"created permission: assign_org_to_self")
+
+    def confirmDefaultGroups(self):
+        print(f"confirmDefaultGroups...")
+        from django.contrib.auth.models import Group
+        found = Group.objects.filter(name="admins").first()
+        if found is None:
+            try:
+                created = Group.objects.create(name="admins")
+                if created is not None:
+                    print(f"created group: admins")
+                else:
+                    print(f"unable to create group: admins")
+            except:
+                print(f"error creating group: admins")
+
 
     def confirmDefaultUser(self):
         print(f"confirmDefaultUser...")

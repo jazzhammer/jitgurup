@@ -153,6 +153,7 @@ def users(request, *args, **kwargs):
                             found,
                             fields=[field.name for field in found._meta.fields if field.name != 'password']
                         )
+
                         return JsonResponse({
                             "message": "user found matching credentials provided",
                             "authenticated": serialized
