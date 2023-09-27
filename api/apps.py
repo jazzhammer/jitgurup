@@ -1,5 +1,7 @@
 import django
 from django.apps import AppConfig
+from django.forms import model_to_dict
+
 
 class ApiConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
@@ -19,9 +21,36 @@ class ApiConfig(AppConfig):
 
         self.confirmDefaultUser()
         self.confirmDefaultOrgs()
+        self.confirmUserOrgs()
         self.confirmDefaultGroups()
         self.confirmDefaultPermissions()
         self.confirmDefaultGroupPermissions()
+
+    def confirmUserOrgs(self):
+        print(f"confirmUserOrgs()...")
+        from .models import UserOrg
+        from .models import Org
+        from django.contrib.auth.models import User
+
+        admin = User.objects.filter(username='jitguruadmin').first()
+
+        orgCommunity = Org.objects.filter(name='jitguru:community').first()
+        orgCommunityDict = model_to_dict(orgCommunity, fields=[field.name for field in orgCommunity._meta.fields])
+        userOrgs = UserOrg.objects.filter(org_id=orgCommunityDict["id"], user_id=admin.id).first()
+        if userOrgs is None:
+            UserOrg.objects.create(user_id=admin.id, org_id=orgCommunityDict["id"])
+
+        orgFacility = Org.objects.filter(name='jitguru:facility').first()
+        orgFacilityDict = model_to_dict(orgFacility, fields=[field.name for field in orgFacility._meta.fields])
+        userOrgs = UserOrg.objects.filter(org_id=orgFacilityDict["id"], user_id=admin.id).first()
+        if userOrgs is None:
+            UserOrg.objects.create(user_id=admin.id, org_id=orgFacilityDict["id"])
+
+        orgMultifacility = Org.objects.filter(name='jitguru:multifacility').first()
+        orgMultifacilityDict = model_to_dict(orgMultifacility, fields=[field.name for field in orgMultifacility._meta.fields])
+        userOrgs = UserOrg.objects.filter(org_id=orgMultifacilityDict["id"], user_id=admin.id).first()
+        if userOrgs is None:
+            UserOrg.objects.create(user_id=admin.id, org_id=orgMultifacilityDict["id"])
 
     def confirmDefaultGroupPermissions(self):
         print(f"confirmDefaultGroupPermissions()...")
