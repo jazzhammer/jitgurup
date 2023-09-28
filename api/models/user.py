@@ -1,4 +1,3 @@
-import django.contrib.auth.models
 from django.db import models
 
 class Person(models.Model):
@@ -8,14 +7,6 @@ class Person(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=['last_name', 'first_name'], name='person_idx'),
-        ]
-
-class Org(models.Model):
-    name = models.CharField(max_length=128)
-    description = models.TextField()
-    class Meta:
-        indexes = [
-            models.Index(fields=['name'], name='org_idx'),
         ]
 
 class OrgPerson(models.Model):

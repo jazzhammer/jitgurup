@@ -28,7 +28,7 @@ class ApiConfig(AppConfig):
     def confirmUserOrgs(self):
         print(f"confirmUserOrgs()...")
         from api.models.user import UserOrg
-        from api.models.user import Org
+        from api.models.org import Org
         from django.contrib.auth.models import User
 
         admin = User.objects.filter(username='jitguruadmin').first()
@@ -102,7 +102,7 @@ class ApiConfig(AppConfig):
 
     def confirmDefaultOrgs(self):
         print(f"confirmDefaultOrgs...")
-        from api.models.user import Org
+        from api.models.org import Org
 
         found = Org.objects.filter(name='jitguru:community').first()
         if found == None:
