@@ -56,11 +56,19 @@ def createUserPreference(user, name, value):
     assert created['user_id'] == user['id']
     assert created['name'] == name
     assert created['value'] == value
+    return created
+
+def validUserPreference(user, preference, name, value):
+    assert preference['name'] == name
+    assert preference['value'] == value
+    response = requests.get(f"{API_BASE_URL}/users/preference?user_id={user['id']}")
+    userPreferencesJson = response.json()
+    assert userPreferencesJson is not None
 
 def testAll():
     user = getUser()
-    createUserPreference(user, 'somepreference', 'vomevalue')
-
+    userPreference = createUserPreference(user, 'somepreference', 'somevalue')
+    validUserPreference(user, userPreference, 'somepreference', 'somevalue')
 # resetTests()
 # testAll()
 # print(get_response.status_code)

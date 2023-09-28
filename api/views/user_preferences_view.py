@@ -1,4 +1,5 @@
 import io
+import json
 
 from django.forms import model_to_dict
 from django.http import JsonResponse
@@ -37,7 +38,20 @@ def preferences(request, *args, **kwargs):
             }, status=201)
 
     if request.method == 'GET':
-        pass
+        params = request.query_params
+        if 'user_id' in params:
+            founds = UserPreference.objects.filter(user_id=params['user_id'])
+            return JsonResponse(
+                json.dumps(
+                    [model_to_dict(found, fields=[field.name for field in found._meta.fields]) for found in founds]
+                ),
+                status=200,
+                safe=False
+            )
+        else:
+            return JsonResponse({
+                "message": "require query-limiting param, eg. user_id",
+            }, status=404)
 
 @api_view(['POST'])
 def reset_tests(request, *args, **kwargs):
