@@ -83,9 +83,9 @@ def authenticate():
 
 def testAll():
     getUserOrgs()
-    # authenticate()
-    # findUsername()
-    # createUser()
+    authenticate()
+    findUsername()
+    createUser()
 
 # resetTests()
 # testAll()

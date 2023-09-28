@@ -4,10 +4,10 @@ from django.forms import model_to_dict
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 
-from api.models import UserOrg, Org
+from api.models.user import UserOrg, Org
 from django.http import JsonResponse
 
-from api.serializers import CreateOrgSerializer, CreateUserOrgSerializer
+from api.serializers.user_serializers import CreateUserOrgSerializer
 
 
 @api_view(["GET", "POST"])
@@ -28,14 +28,21 @@ def user_orgs(request, *args, **kwargs):
     elif request.method == "POST":
         body = request.body
         newUserOrg = JSONParser.parse(io.BytesIO(body))
-        serializer = CreateUserOrgSerializer(data=newUserOrg)
-        if serializer.is_valid():
-            Org.objects.create(**serializer.validated_data)
-            return JsonResponse({
-                "message": "success",
-                "created": serializer.validated_data
-            }, status=201)
+        already = UserOrg.objects.filter(user_id=newUserOrg['user_id'], org_id=newUserOrg['org_id']).first()
+        if already is None:
+            serializer = CreateUserOrgSerializer(data=newUserOrg)
+            if serializer.is_valid():
+                Org.objects.create(**serializer.validated_data)
+                return JsonResponse({
+                    "message": "success",
+                    "created": serializer.validated_data
+                }, status=201)
+            else:
+                return JsonResponse({
+                    "message": "failure. unable to create UserOrg"
+                }, status=400)
         else:
             return JsonResponse({
-                "message": "failure. unable to create UserOrg"
+                "message": "failed to create. previously created UserOrg",
+                "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
             }, status=400)

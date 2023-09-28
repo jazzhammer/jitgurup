@@ -1,4 +1,3 @@
-import django
 from django.apps import AppConfig
 from django.forms import model_to_dict
 
@@ -28,8 +27,8 @@ class ApiConfig(AppConfig):
 
     def confirmUserOrgs(self):
         print(f"confirmUserOrgs()...")
-        from .models import UserOrg
-        from .models import Org
+        from api.models.user import UserOrg
+        from api.models.user import Org
         from django.contrib.auth.models import User
 
         admin = User.objects.filter(username='jitguruadmin').first()
@@ -103,7 +102,7 @@ class ApiConfig(AppConfig):
 
     def confirmDefaultOrgs(self):
         print(f"confirmDefaultOrgs...")
-        from .models import Org
+        from api.models.user import Org
 
         found = Org.objects.filter(name='jitguru:community').first()
         if found == None:

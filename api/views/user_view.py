@@ -1,11 +1,10 @@
 import http
 import io
 from rest_framework.parsers import JSONParser
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 
-from api.models import Person
-from api.serializers import CreatePersonSerializer, CreateUserSerializer
+from api.models.user import Person
+from api.serializers.user_serializers import CreatePersonSerializer, CreateUserSerializer
 from django.forms.models import model_to_dict
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -14,7 +13,6 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate
 import psycopg2
 from jitgurup.settings import DATABASES
-from api.apps import AppConfig
 
 
 @api_view(["POST"])
@@ -160,27 +158,40 @@ def users(request, *args, **kwargs):
                             "authenticated": serialized
                         })
         # else proceed to create user row
-        serializer = CreateUserSerializer(data=creds)
-        if serializer.is_valid():
+        #                             __
+        #  ___________   ____ _____ _/  |_  ____
+        # _/ ___\_  __ \_/ __ \\__  \\   __\/ __ \
+        # \  \___|  | \/\  ___/ / __ \|  | \  ___/
+        # \___  >__|    \___  >____  /__|  \___  >
+        #     \/            \/     \/          \/ if not dupe
+        already = User.objects.filter(username=creds['username']).first()
+        if already is None:
+            serializer = CreateUserSerializer(data=creds)
+            if serializer.is_valid():
 
-            user = User.objects.create_user(
-                serializer.validated_data['username'],
-                serializer.validated_data['email'],
-                serializer.validated_data['password']
-            )
-            user.last_name = serializer.validated_data['last_name']
-            user.first_name = serializer.validated_data['first_name']
-            user.save()
+                user = User.objects.create_user(
+                    serializer.validated_data['username'],
+                    serializer.validated_data['email'],
+                    serializer.validated_data['password']
+                )
+                user.last_name = serializer.validated_data['last_name']
+                user.first_name = serializer.validated_data['first_name']
+                user.save()
 
-            # create default Person for this user
-            return JsonResponse({
-                "message": "success",
-                "created": serializer.validated_data
-            }, status=201)
-        else:
-            return JsonResponse({
-                "message": "failure: minimum object field requirements not met"
-            }, status=400)
+                # create default Person for this user
+                del serializer.validated_data['password']
+                serializer.validated_data['id'] = user.id
+                return JsonResponse({
+                    "message": "success",
+                    "created": serializer.validated_data
+                }, status=201)
+            else:
+                return JsonResponse({
+                    "message": "failure: minimum object field requirements not met"
+                }, status=400)
+        return JsonResponse({
+            "message": "failure. user previously created for that username",
+        }, status=400)
 
     return JsonResponse({
         "message": "failure"
@@ -214,7 +225,7 @@ def seed_default_users(request, *args, **kwargs):
 
 def confirmDefaultOrgs():
     print(f"confirmDefaultOrgs...")
-    from .models import Org
+    from api.models.user import Org
     defaultOrgs = []
     found = Org.objects.filter(name='jitguru:community').first()
     if found == None:
@@ -258,8 +269,8 @@ def seed_default_orgs(request, *args, **kwargs):
 
 def confirmUserOrgs():
     print(f"confirmUserOrgs()...")
-    from .models import UserOrg
-    from .models import Org
+    from api.models.user import UserOrg
+    from api.models.user import Org
     from django.contrib.auth.models import User
 
     admin = User.objects.filter(username='jitguruadmin').first()
