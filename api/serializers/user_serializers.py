@@ -2,7 +2,8 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from api.models.org import Org
-from api.models.user import Person, UserOrg
+from api.models.person import Person
+from api.models.user_org import UserOrg
 
 
 class CreatePersonSerializer(serializers.ModelSerializer):

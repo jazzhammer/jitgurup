@@ -3,7 +3,7 @@ import io
 from rest_framework.parsers import JSONParser
 from django.contrib.auth.models import User
 
-from api.models.user import Person
+from api.models.person import Person
 from api.serializers.user_serializers import CreatePersonSerializer, CreateUserSerializer
 from django.forms.models import model_to_dict
 from rest_framework.response import Response
@@ -235,7 +235,7 @@ def seed_default_users(request, *args, **kwargs):
 
 def confirmDefaultOrgs():
     print(f"confirmDefaultOrgs...")
-    from api.models.user import Org
+    from api.models.user_person import Org
     defaultOrgs = []
     found = Org.objects.filter(name='jitguru:community').first()
     if found == None:
@@ -279,8 +279,8 @@ def seed_default_orgs(request, *args, **kwargs):
 
 def confirmUserOrgs():
     print(f"confirmUserOrgs()...")
-    from api.models.user import UserOrg
-    from api.models.user import Org
+    from api.models.user_person import UserOrg
+    from api.models.user_org import Org
     from django.contrib.auth.models import User
 
     admin = User.objects.filter(username='jitguruadmin').first()

@@ -6,7 +6,7 @@ from django.forms import model_to_dict
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 
-from api.models.user import UserOrg
+from api.models.user_org import UserOrg
 from api.models.org import Org
 from django.http import JsonResponse
 

@@ -2,6 +2,7 @@ from django.apps import AppConfig
 from django.forms import model_to_dict
 
 
+
 class ApiConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "api"
@@ -27,9 +28,10 @@ class ApiConfig(AppConfig):
 
     def confirmUserOrgs(self):
         print(f"confirmUserOrgs()...")
-        from api.models.user import UserOrg
+        from api.models.user_org import UserOrg
         from api.models.org import Org
         from django.contrib.auth.models import User
+        from api.models.facility import Facility
 
         admin = User.objects.filter(username='jitguruadmin').first()
 
@@ -40,16 +42,34 @@ class ApiConfig(AppConfig):
             UserOrg.objects.create(user_id=admin.id, org_id=orgCommunityDict["id"])
 
         orgFacility = Org.objects.filter(name='jitguru org:1 facility').first()
-        orgFacilityDict = model_to_dict(orgFacility, fields=[field.name for field in orgFacility._meta.fields])
-        userOrgs = UserOrg.objects.filter(org_id=orgFacilityDict["id"], user_id=admin.id).first()
-        if userOrgs is None:
-            UserOrg.objects.create(user_id=admin.id, org_id=orgFacilityDict["id"])
+        if orgFacility is None:
+            orgFacility = Org.objects.create(name='jitguru org:1 facility')
+        if orgFacility is not None:
+            orgFacilityDict = model_to_dict(orgFacility, fields=[field.name for field in orgFacility._meta.fields])
+            userOrgs = UserOrg.objects.filter(org_id=orgFacilityDict["id"], user_id=admin.id).first()
+            if userOrgs is None:
+                userOrg = UserOrg.objects.create(user_id=admin.id, org_id=orgFacilityDict["id"])
+            # create the one facility for this org. ergo... orgFacilityFacility
+            orgFacilityDict = model_to_dict(orgFacility, fields=[field.name for field in orgFacility._meta.fields])
+            facility = Facility.objects.filter(org_id=orgFacilityDict['id']).first()
+            if facility is None:
+                facility = Facility.objects.create(org_id=orgFacilityDict['id'],name='jitguru facility: millhouse', description='singleton facility of jitguru org: facility')
 
         orgMultifacility = Org.objects.filter(name='jitguru org:multifacility').first()
-        orgMultifacilityDict = model_to_dict(orgMultifacility, fields=[field.name for field in orgMultifacility._meta.fields])
-        userOrgs = UserOrg.objects.filter(org_id=orgMultifacilityDict["id"], user_id=admin.id).first()
-        if userOrgs is None:
-            UserOrg.objects.create(user_id=admin.id, org_id=orgMultifacilityDict["id"])
+        if orgMultifacility is None:
+            orgMultifacility = Org.objects.create(name='jitguru org:multifacility')
+        if orgMultifacility is not None:
+            orgMultifacilityDict = model_to_dict(orgMultifacility, fields=[field.name for field in orgMultifacility._meta.fields])
+            userOrgs = UserOrg.objects.filter(org_id=orgMultifacilityDict["id"], user_id=admin.id).first()
+            if userOrgs is None:
+                UserOrg.objects.create(user_id=admin.id, org_id=orgMultifacilityDict["id"])
+            # create the facilitys for this org.
+            orgMultifacilityDict = model_to_dict(orgMultifacility, fields=[field.name for field in orgMultifacility._meta.fields])
+            facilitys = Facility.objects.filter(org_id=orgMultifacilityDict['id'])
+            if facilitys is None or len(facilitys) == 0:
+                facility = Facility.objects.create(org_id=orgMultifacilityDict['id'],name='jitguru facility: henhouse', description='1/3 of multifacility')
+                facility = Facility.objects.create(org_id=orgMultifacilityDict['id'],name='jitguru facility: woodshed', description='2/3 of multifacility')
+                facility = Facility.objects.create(org_id=orgMultifacilityDict['id'],name='jitguru facility: hayshed', description='3/3 of multifacility')
 
     def confirmDefaultGroupPermissions(self):
         print(f"confirmDefaultGroupPermissions()...")
