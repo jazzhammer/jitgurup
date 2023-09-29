@@ -8,6 +8,7 @@ urlpatterns = [
     path('orgs', orgs_view.orgs),
     path('persons', user_view.persons),
     path('users', user_view.users),
+    path('users/<int:user_id>', user_view.user),
     path('users/permission', security_permissions_view.security_permissions),
     path('users/preference', user_preferences_view.preferences),
     path('users/orgs', orgs_view.user_orgs),

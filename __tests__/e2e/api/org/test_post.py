@@ -34,7 +34,17 @@ def getOrg(org):
     assert orgJson['name'] == "testname"
     assert orgJson['description'] == 'testdescription'
 
+def getOrgByName(org):
+    response = requests.get(
+        f"{API_BASE_URL}/orgs?name={org['name']}"
+    )
+    responseJson = response.json()
+    orgJson = responseJson['matched']
+    assert orgJson['name'] == org['name']
+    assert orgJson['id'] == org['id']
+
 def testAll():
     created = createOrg()
     getOrg(created)
+    getOrgByName(created)
 

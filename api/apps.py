@@ -56,10 +56,16 @@ class ApiConfig(AppConfig):
         from django.contrib.auth.models import Group
         from django.contrib.auth.models import Permission
         from django.contrib.auth.models import User
+
         admins = Group.objects.filter(name="admins").first()
-        assign_org_to_self = Permission.objects.filter(codename="assign_org_to_self").first()
         admin = User.objects.filter(username="jitguruadmin").first()
+
+        assign_org_to_self = Permission.objects.filter(codename="assign_org_to_self").first()
+        add_org = Permission.objects.filter(codename="add_org").first()
+
         admins.permissions.add(assign_org_to_self)
+        admins.permissions.add(add_org)
+
         admin.groups.add(admins)
 
     def confirmDefaultPermissions(self):

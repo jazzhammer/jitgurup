@@ -56,26 +56,43 @@ def org(request, org_id):
         }, status=404)
 
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 def orgs(request, *args, **kwargs):
-    newOrg = JSONParser().parse(request)
-    if 'name' in newOrg:
-        already = Org.objects.filter(name=newOrg['name']).first()
-        if already is None:
-            created = Org.objects.create(name=newOrg['name'], description=newOrg['description'])
-            return JsonResponse({
-                "message": "created Org",
-                "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
-            }, status=200)
+    if request.method == 'POST':
+        newOrg = JSONParser().parse(request)
+        if 'name' in newOrg:
+            already = Org.objects.filter(name=newOrg['name']).first()
+            if already is None:
+                created = Org.objects.create(name=newOrg['name'], description=newOrg['description'])
+                return JsonResponse({
+                    "message": "created Org",
+                    "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
+                }, status=200)
+            else:
+                return JsonResponse({
+                    "message": "created Org",
+                    "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
+                }, status=200)
         else:
             return JsonResponse({
-                "message": "created Org",
-                "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
-            }, status=200)
-    else:
-        return JsonResponse({
-            "message": "unable to create for missing minimum fields"
-        }, status=400)
+                "message": "unable to create for missing minimum fields"
+            }, status=400)
+    elif request.method == 'GET':
+        name = request.query_params['name']
+        if name is not None:
+            found = Org.objects.filter(name=name).first()
+            if found is not None:
+                return JsonResponse({
+                    "matched": model_to_dict(found, fields=[field.name for field in found._meta.fields])
+                }, status=200)
+            else:
+                return JsonResponse({
+                    "message": f"no org of name {name} found"
+                }, status=404)
+        else:
+            return JsonResponse({
+                "message": f"require name to search for an Org"
+            }, status=400)
 
 
 @api_view(["GET", "POST"])

@@ -62,7 +62,6 @@ def findUsername():
     assert matched["username"] == "gorgonhasspoken"
     assert matched["email"] == "live@jazzhammer.com"
 
-
 def authenticate():
     resetTests()
     createUser()

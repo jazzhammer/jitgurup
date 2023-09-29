@@ -15,6 +15,16 @@ import psycopg2
 from jitgurup.settings import DATABASES
 
 
+@api_view(['GET'])
+def user(request, user_id):
+    found = User.objects.get(id=user_id)
+    if found is None:
+        return JsonResponse({
+            "message": "failure"
+        }, status=404)
+    else:
+        return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200)
+
 @api_view(["POST"])
 def api_home(request, *args, **kwargs):
     data = request.data
