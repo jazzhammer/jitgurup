@@ -16,6 +16,13 @@ def facility(request, facility_id):
             "message": "failure"
         }, status=404)
 
+@api_view(['POST'])
+def reset_tests(request):
+    Facility.objects.all().delete()
+    return JsonResponse({
+        "message": "success"
+    }, status=200)
+
 @api_view(['POST', 'GET'])
 def facilitys(request, *args, **kwargs):
     if request.method == 'POST':
@@ -40,7 +47,8 @@ def facilitys(request, *args, **kwargs):
             }, status=200)
 
     if request.method == 'GET':
-        name = request.query_params['name']
+        name = request.query_params['name'] if 'name' in request.query_params else None
+        org_id = request.query_params['org_id'] if 'org_id' in request.query_params else None
         if name is not None:
             found = Facility.objects.filter(name=name).first()
             if found is not None:
@@ -48,7 +56,15 @@ def facilitys(request, *args, **kwargs):
                     "message": "success",
                     "matched": model_to_dict(found, fields=[field.name for field in found._meta.fields])
                 }, status=200)
+        if org_id is not None:
+                founds = Facility.objects.filter(org_id=org_id)
+                if founds is not None:
+                    return JsonResponse({
+                        "message": "success",
+                        "matched": [model_to_dict(found, fields=[field.name for field in found._meta.fields]) for found in founds]
+                    }, status=200)
+
         else:
             return JsonResponse({
-                "message": "require name for facility query"
+                "message": "require name or org_id for facility query"
             }, status=400)

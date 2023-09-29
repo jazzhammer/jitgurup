@@ -8,5 +8,6 @@ class FacilitySerializer(ModelSerializer):
         model = Facility
         fields = (
             'name',
-            'description'
+            'description',
+            'org_id',
         )

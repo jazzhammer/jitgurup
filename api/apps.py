@@ -33,19 +33,19 @@ class ApiConfig(AppConfig):
 
         admin = User.objects.filter(username='jitguruadmin').first()
 
-        orgCommunity = Org.objects.filter(name='jitguru:community').first()
+        orgCommunity = Org.objects.filter(name='jitguru org:community').first()
         orgCommunityDict = model_to_dict(orgCommunity, fields=[field.name for field in orgCommunity._meta.fields])
         userOrgs = UserOrg.objects.filter(org_id=orgCommunityDict["id"], user_id=admin.id).first()
         if userOrgs is None:
             UserOrg.objects.create(user_id=admin.id, org_id=orgCommunityDict["id"])
 
-        orgFacility = Org.objects.filter(name='jitguru:facility').first()
+        orgFacility = Org.objects.filter(name='jitguru org:1 facility').first()
         orgFacilityDict = model_to_dict(orgFacility, fields=[field.name for field in orgFacility._meta.fields])
         userOrgs = UserOrg.objects.filter(org_id=orgFacilityDict["id"], user_id=admin.id).first()
         if userOrgs is None:
             UserOrg.objects.create(user_id=admin.id, org_id=orgFacilityDict["id"])
 
-        orgMultifacility = Org.objects.filter(name='jitguru:multifacility').first()
+        orgMultifacility = Org.objects.filter(name='jitguru org:multifacility').first()
         orgMultifacilityDict = model_to_dict(orgMultifacility, fields=[field.name for field in orgMultifacility._meta.fields])
         userOrgs = UserOrg.objects.filter(org_id=orgMultifacilityDict["id"], user_id=admin.id).first()
         if userOrgs is None:

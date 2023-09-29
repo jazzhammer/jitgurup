@@ -15,6 +15,8 @@ urlpatterns = [
     path('users/preference', user_preferences_view.preferences),
     path('users/orgs', orgs_view.user_orgs),
     path('tests/reset', user_view.reset_tests),
+    path('tests/reset/facility', facilitys_view.reset_tests),
+
     path('tests/reset/org', orgs_view.reset_tests),
     path('tests/reset/security', user_view.reset_tests_security),
     path('tests/reset/users/preference', user_preferences_view.reset_tests),
