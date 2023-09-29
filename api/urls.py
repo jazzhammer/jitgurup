@@ -1,11 +1,13 @@
 from django.urls import path
 
-from .views import user_view, user_preferences_view, orgs_view, security_permissions_view
+from .views import user_view, user_preferences_view, orgs_view, security_permissions_view, facilitys_view
 
 urlpatterns = [
     path('', user_view.api_home),
-    path('orgs/<int:org_id>', orgs_view.org),
+    path('facilitys', facilitys_view.facilitys),
+    path('facility/<int:facility_id>', facilitys_view.facility),
     path('orgs', orgs_view.orgs),
+    path('orgs/<int:org_id>', orgs_view.org),
     path('persons', user_view.persons),
     path('users', user_view.users),
     path('users/<int:user_id>', user_view.user),
