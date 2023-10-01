@@ -7,6 +7,6 @@ class SpotType(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['name'], name='org_idx'),
+            models.Index(fields=['name'], name='spot_type_idx'),
         ]
 
