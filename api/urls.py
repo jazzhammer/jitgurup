@@ -16,6 +16,7 @@ urlpatterns = [
     path('spot_type/<int:spot_type_id>', spot_types_view.spot_type),
     path('users', user_view.users),
     path('users/<int:user_id>', user_view.user),
+    path('users/meetup_spot', user_meetup_spots_view.user_meetup_spots),
     path('users/permission', security_permissions_view.security_permissions),
     path('users/preference', user_preferences_view.preferences),
     path('users/orgs', orgs_view.user_orgs),
