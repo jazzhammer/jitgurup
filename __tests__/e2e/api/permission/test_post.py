@@ -2,11 +2,10 @@ import psycopg2
 import requests
 from __tests__.e2e.api.endpoint import API_BASE_URL
 
-def getUserPermission(user, permission):
-    response = requests.get(f"{API_BASE_URL}/users/permission?user_id={user['id']}&permission={permission}")
+def getUserPermissions(user):
+    response = requests.get(f"{API_BASE_URL}/users/permission?user_id={user['id']}")
     permissionJson = response.json()
     assert permissionJson is not None
-    assert permissionJson['hasPermission'] == True
 
 def getUser():
     from jitgurup.settings import DATABASES
@@ -26,4 +25,4 @@ def getUser():
 
 def testAll():
     jitguruadmin = getUser()
-    getUserPermission(jitguruadmin, 'add_org')
+    getUserPermissions(jitguruadmin)

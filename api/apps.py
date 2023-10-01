@@ -82,9 +82,11 @@ class ApiConfig(AppConfig):
 
         assign_org_to_self = Permission.objects.filter(codename="assign_org_to_self").first()
         add_org = Permission.objects.filter(codename="add_org").first()
+        add_facility = Permission.objects.filter(codename="add_facility").first()
 
         admins.permissions.add(assign_org_to_self)
         admins.permissions.add(add_org)
+        admins.permissions.add(add_facility)
 
         admin.groups.add(admins)
 
