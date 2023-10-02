@@ -1,0 +1,30 @@
+from django.forms import model_to_dict
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+from rest_framework.parsers import JSONParser
+
+from api.models import Person
+from api.serializers.user_serializers import CreatePersonSerializer
+
+
+@api_view(["POST", "GET"])
+def persons(request, person_id, **kwargs):
+
+    if request.method == 'POST':
+        new_person = JSONParser().parse(request)
+        serializer = CreatePersonSerializer(data=new_person)
+        if serializer.is_valid():
+            Person.objects.create(**serializer.validated_data)
+            return JsonResponse({
+                "message": "success",
+                "created": serializer.validated_data
+            }, status=201)
+        else:
+            return JsonResponse({
+                "message": "failure: minimum object field requirements not met"
+            }, status=400)
+
+    if request.method == 'GET':
+        if person_id is not None:
+            found = Person.objects.get(id=person_id)
+            return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200)

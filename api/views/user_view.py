@@ -106,27 +106,6 @@ def reset_tests_security(request, *args, **kwargs):
 
 
 @api_view(["POST"])
-def persons(request, *args, **kwargs):
-    if request.method == 'POST':
-        body = request.body
-        new_person = JSONParser().parse(io.BytesIO(body))
-        serializer = CreatePersonSerializer(data=new_person)
-        if serializer.is_valid():
-            Person.objects.create(**serializer.validated_data)
-            return JsonResponse({
-                "message": "success",
-                "created": serializer.validated_data
-            }, status=201)
-        else:
-            return JsonResponse({
-                "message": "failure: minimum object field requirements not met"
-            }, status=400)
-    return JsonResponse({
-        "message": "success"
-    }, status=200)
-
-
-@api_view(["POST"])
 def users(request, *args, **kwargs):
     if request.method == 'POST':
         body = request.body

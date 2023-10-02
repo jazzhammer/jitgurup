@@ -40,3 +40,5 @@ class CreateUserOrgSerializer(serializers.ModelSerializer):
             "user_id",
             "org_id"
         )
+
+

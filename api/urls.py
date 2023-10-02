@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import user_view, user_preferences_view, orgs_view, security_permissions_view, facilitys_view, \
-    meetup_spots_view, spot_types_view
+    meetup_spots_view, spot_types_view, user_persons_view, user_meetup_spots_view, persons_view, org_persons_view
 
 urlpatterns = [
     path('', user_view.api_home),
@@ -11,7 +11,10 @@ urlpatterns = [
     path('meetup_spot/<int:meetup_spot_id>', meetup_spots_view.meetup_spot),
     path('orgs', orgs_view.orgs),
     path('orgs/<int:org_id>', orgs_view.org),
-    path('persons', user_view.persons),
+    path('orgs/person', org_persons_view.org_persons),
+    path('orgs/person/<int:org_id>', org_persons_view.org_persons),
+    path('persons', persons_view.persons),
+    path('persons/<int:person_id>', persons_view.persons),
     path('spot_types', spot_types_view.spot_types),
     path('spot_type/<int:spot_type_id>', spot_types_view.spot_type),
     path('users', user_view.users),
@@ -20,6 +23,7 @@ urlpatterns = [
     path('users/permission', security_permissions_view.security_permissions),
     path('users/preference', user_preferences_view.preferences),
     path('users/orgs', orgs_view.user_orgs),
+    path('users/persons', user_persons_view.user_persons),
     path('tests/reset', user_view.reset_tests),
     path('tests/reset/facility', facilitys_view.reset_tests),
 

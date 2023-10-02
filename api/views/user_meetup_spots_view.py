@@ -53,13 +53,13 @@ def user_meetup_spots(request, *args, **kwargs):
         if user_id is not None:
             # return all matching meetupSpots
             founds = UserMeetupSpot.objects.filter(user_id=user_id)
-            if found is not None:
+            if founds is not None:
                 return JsonResponse({
                     "message": "success",
-                    "matched": model_to_dict(found, fields=[field.name for field in found._meta.fields])
+                    "matched": [model_to_dict(found, fields=[field.name for field in found._meta.fields]) for found in founds]
                 }, status=200)
-        if facility_id is not None:
-                founds = UserMeetupSpot.objects.filter(facility_id=facility_id)
+        if meetup_spot_id is not None:
+                founds = UserMeetupSpot.objects.filter(meetup_spot_id=meetup_spot_id)
                 if founds is not None:
                     return JsonResponse({
                         "message": "success",
