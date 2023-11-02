@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 
-from api.models import OrgPerson
+from api.models.org_person import OrgPerson
 
 
 class OrgPersonSerializer(ModelSerializer):

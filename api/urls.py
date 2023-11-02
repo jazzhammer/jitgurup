@@ -4,7 +4,6 @@ from .views import user_view, user_preferences_view, orgs_view, security_permiss
     meetup_spots_view, spot_types_view, user_persons_view, user_meetup_spots_view, persons_view, org_persons_view
 
 urlpatterns = [
-    path('', user_view.api_home),
     path('facilitys', facilitys_view.facilitys),
     path('facility/<int:facility_id>', facilitys_view.facility),
     path('meetup_spots', meetup_spots_view.meetup_spots),
@@ -24,6 +23,7 @@ urlpatterns = [
     path('users/preference', user_preferences_view.preferences),
     path('users/orgs', orgs_view.user_orgs),
     path('users/persons', user_persons_view.user_persons),
+    path('users/user_groups', user_view.user_user_groups),
     path('tests/reset', user_view.reset_tests),
     path('tests/reset/facility', facilitys_view.reset_tests),
 

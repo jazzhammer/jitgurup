@@ -7,7 +7,7 @@ from rest_framework.parsers import JSONParser
 
 from django.contrib.auth.models import User
 
-from api.models import UserPerson
+from api.models.user_person import UserPerson
 from api.serializers.user_person_serializer import UserPersonSerializer
 
 

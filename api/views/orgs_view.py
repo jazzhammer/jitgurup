@@ -103,7 +103,7 @@ def user_orgs(request, *args, **kwargs):
         userOrgDicts = [model_to_dict(found, fields=[field.name for field in found._meta.fields]) for found in founds]
         orgDicts = []
         for userOrgDict in userOrgDicts:
-            org = Org.objects.get(id=userOrgDict["org_id"])
+            org = Org.objects.get(id=userOrgDict["org"])
             orgDict = model_to_dict(org, fields=[field.name for field in org._meta.fields])
             orgDicts.append(orgDict)
         return JsonResponse({

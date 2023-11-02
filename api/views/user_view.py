@@ -3,17 +3,33 @@ import io
 from rest_framework.parsers import JSONParser
 from django.contrib.auth.models import User
 
+from api.models.org import Org
 from api.models.person import Person
+from api.models.user_org import UserOrg
 from api.serializers.user_serializers import CreatePersonSerializer, CreateUserSerializer
 from django.forms.models import model_to_dict
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from products.serializers import ProductSerializer
 from django.http import JsonResponse
 from django.contrib.auth import authenticate
 import psycopg2
 from jitgurup.settings import DATABASES
 
+
+@api_view(['GET'])
+def user_user_groups(request):
+    user = User.objects.get(id=int(request.query_params['user_id']))
+    if user is None:
+        return JsonResponse({
+            "message": "failure"
+        }, status=404)
+    groups = user.groups.all()
+    result = []
+    for group in groups:
+        result.append(model_to_dict(group, [field.name for field in group._meta.fields]))
+    return JsonResponse({
+        'user_groups': result
+    }, status=200)
 
 @api_view(['GET'])
 def user(request, user_id):
@@ -24,21 +40,6 @@ def user(request, user_id):
         }, status=404)
     else:
         return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200)
-
-@api_view(["POST"])
-def api_home(request, *args, **kwargs):
-    data = request.data
-    serializer = ProductSerializer(data=data)
-    if serializer.is_valid(raise_exception=True):
-        # instance = serializer.save()
-        # print(instance)
-        data = serializer.data
-        print(data)
-        return Response(data)
-    return Response({"error": "bad data"}, status=http.HTTPStatus.BAD_REQUEST)
-
-    # return JsonResponse(data)
-
 
 @api_view(["POST"])
 def reset_tests(request, *args, **kwargs):
@@ -168,6 +169,11 @@ def users(request, *args, **kwargs):
                 user.save()
 
                 # create default Person for this user
+                person = Person.objects.create(last_name=user.last_name, first_name=user.first_name)
+                person.save()
+                # assign default Org(s) for this user
+                UserOrg.assignUserDefaults(user)
+
                 del serializer.validated_data['password']
                 serializer.validated_data['id'] = user.id
                 return JsonResponse({
@@ -214,7 +220,7 @@ def seed_default_users(request, *args, **kwargs):
 
 def confirmDefaultOrgs():
     print(f"confirmDefaultOrgs...")
-    from api.models.user_person import Org
+    from api.models.org import Org
     defaultOrgs = []
     found = Org.objects.filter(name='jitguru:community').first()
     if found == None:
@@ -258,8 +264,8 @@ def seed_default_orgs(request, *args, **kwargs):
 
 def confirmUserOrgs():
     print(f"confirmUserOrgs()...")
-    from api.models.user_person import UserOrg
-    from api.models.user_org import Org
+    from api.models.user_org import UserOrg
+    from api.models.org import Org
     from django.contrib.auth.models import User
 
     admin = User.objects.filter(username='jitguruadmin').first()

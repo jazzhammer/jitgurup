@@ -45,6 +45,23 @@ def getUserOrgs():
     print(f"userOrgsJson: {userOrgsJson}")
     assert len(userOrgsJson['assigned']) == 3
 
+def getUserUserGroups():
+    resetTests()
+    response = requests.post(f"{API_BASE_URL}/seed/default_users")
+    response = requests.post(f"{API_BASE_URL}/seed/default_orgs")
+    response = requests.post(f"{API_BASE_URL}/seed/default_user_orgs")
+    response = requests.post(f"{API_BASE_URL}/users",
+                  json={
+                      "username": "jitguruadmin",
+                      "password": "ilovethejitguru"
+                  })
+    userJson = response.json()
+
+    response = requests.get(f"{API_BASE_URL}/users/user_groups?user_id={userJson['authenticated']['id']}")
+    userUserGroupsJson = response.json()
+    print(f"userOrgsJson: {userUserGroupsJson}")
+    # assert len(userOrgsJson['assigned']) == 3
+
 def findUsername():
     resetTests()
     createUser()
@@ -85,6 +102,7 @@ def testAll():
     authenticate()
     findUsername()
     createUser()
+    getUserUserGroups()
 
 # resetTests()
 # testAll()

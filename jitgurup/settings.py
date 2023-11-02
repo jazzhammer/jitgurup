@@ -32,7 +32,6 @@ ALLOWED_HOSTS = ["localhost"]
 
 INSTALLED_APPS = [
     'api',
-    'products',
     'rest_framework',
     'corsheaders',
     'django.contrib.admin',

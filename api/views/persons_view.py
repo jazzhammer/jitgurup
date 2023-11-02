@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 
-from api.models import Person
+from api.models.person import Person
 from api.serializers.user_serializers import CreatePersonSerializer
 
 
