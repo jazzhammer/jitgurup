@@ -28,14 +28,17 @@ def facilitys(request, *args, **kwargs):
     if request.method == 'POST':
         newFacility = JSONParser().parse(request)
         already = Facility.objects.filter(name=newFacility['name']).first()
-        if already is None:
+        if not already:
             serializer = FacilitySerializer(data=newFacility)
             if serializer.is_valid():
-                created = Facility.objects.create(**serializer.validated_data)
+                name = newFacility.get('name')
+                description = newFacility.get('description')
+                org_id = newFacility.get('org_id')
+                created = Facility.objects.create(name=name, description=description, org_id=org_id)
                 return JsonResponse({
                     "message": "success",
-                    "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
-                }, status=201)
+                    "created": model_to_dict(created)
+                }, status=201, safe=False)
             else:
                 return JsonResponse({
                     "message": "failure"
@@ -47,24 +50,34 @@ def facilitys(request, *args, **kwargs):
             }, status=200)
 
     if request.method == 'GET':
-        name = request.query_params['name'] if 'name' in request.query_params else None
-        org_id = request.query_params['org_id'] if 'org_id' in request.query_params else None
-        if name is not None:
+        name = request.GET.get('name')
+        org_id = request.GET.get('org_id')
+        if name:
             found = Facility.objects.filter(name=name).first()
-            if found is not None:
+            if found:
                 return JsonResponse({
                     "message": "success",
                     "matched": model_to_dict(found, fields=[field.name for field in found._meta.fields])
-                }, status=200)
-        if org_id is not None:
+                }, status=200, safe=False)
+            else:
+                return JsonResponse({
+                    "message": "success",
+                    "matched": []
+                }, status=200, safe=False)
+        if org_id:
                 founds = Facility.objects.filter(org_id=org_id)
-                if founds is not None:
+                if founds:
                     return JsonResponse({
                         "message": "success",
-                        "matched": [model_to_dict(found, fields=[field.name for field in found._meta.fields]) for found in founds]
+                        "matched": [model_to_dict(instance) for instance in founds]
                     }, status=200)
+                else:
+                    return JsonResponse({
+                        "message": "success",
+                        "matched": []
+                    }, status=400, safe=False)
 
         else:
             return JsonResponse({
                 "message": "require name or org_id for facility query"
-            }, status=400)
+            }, status=400, safe=False)

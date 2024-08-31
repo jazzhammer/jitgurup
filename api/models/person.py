@@ -14,3 +14,7 @@ class Person(models.Model):
     def __str__(self):
         return f"{self.last_name.upper()}, {self.first_name.lower()}"
 
+    def save(self, *args, **kwargs):
+        self.last_name = self.last_name.lower()
+        self.first_name = self.first_name.lower()
+        super(Person, self).save(*args, **kwargs)

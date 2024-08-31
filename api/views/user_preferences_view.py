@@ -1,8 +1,9 @@
 import io
 import json
 
+from django.db.models import QuerySet
 from django.forms import model_to_dict
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 
@@ -11,31 +12,25 @@ from api.serializers.user_preference_serializer import UserPreferenceSerializer
 from django.contrib.auth.models import User
 
 @api_view(["POST", "GET"])
-def preferences(request, *args, **kwargs):
+def preferences(request: HttpRequest, *args, **kwargs):
     if request.method == 'POST':
-        # body = request.body
-        newUserPreference = JSONParser().parse(request)
-        # if already, update
-        already = UserPreference.objects.filter(user_id=newUserPreference["user_id"], name=newUserPreference["name"]).first()
-        if already is None:
-            serializer = UserPreferenceSerializer(data=newUserPreference)
-            if serializer.is_valid():
-                created = UserPreference.objects.create(**serializer.validated_data)
-                return JsonResponse({
-                    "message": "created UserPreference",
-                    "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
-                }, status=201)
-            else:
-                return JsonResponse({
-                    "message": "unable to create UserPreference for invalid fields"
-                }, status=201)
+        user_id = request.data.get('user_id')
+        name = request.data.get('name')
+        value = request.data.get('value')
+        alreadys: QuerySet = UserPreference.objects.filter(user_id=user_id, name=name)
+        if alreadys is None or alreadys.count() == 0:
+            created = UserPreference.objects.create(user_id=user_id, name=name, value=value)
+            return JsonResponse({
+                "message": "created UserPreference",
+                "created": model_to_dict(created)
+            }, status=201, safe=False)
         else:
-            already.value = newUserPreference['value']
+            already.value = value
             already.save()
             return JsonResponse({
-                "message": "updated existing UserPreference",
-                "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
-            }, status=201)
+                "message": "updated UserPreference",
+                "updated": model_to_dict(already)
+            }, status=200, safe=False)
 
     if request.method == 'GET':
         params = request.query_params
@@ -60,4 +55,4 @@ def reset_tests(request, *args, **kwargs):
     return JsonResponse({
         "message": "success",
         "deleted": "all"
-    }, status=200)
+    }, status=200, safe=False)

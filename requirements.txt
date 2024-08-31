@@ -4,5 +4,4 @@ pyyaml
 requests
 django-cors-headers
 pytest
-psycopg2
 psycopg2-binary
