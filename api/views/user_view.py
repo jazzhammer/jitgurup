@@ -106,8 +106,67 @@ def reset_tests_security(request, *args, **kwargs):
         }, status=500)
 
 
-@api_view(["POST"])
+@api_view(["POST", "GET"])
 def users(request, *args, **kwargs):
+    if request.method == 'GET':
+        id: str = request.GET.get('id')
+        if id:
+            try:
+               found = User.objects.get(pk=int(id))
+               user_dict = model_to_dict(
+                   found,
+                   fields=[field.name for field in found._meta.get_fields() if field.name != 'password']
+               )
+               return JsonResponse({"message": "success", "data": user_dict})
+            except Exception as e:
+                return JsonResponse({"error": f"error retrieving user for {id=}"}, status=400, safe=False)
+        # last_login
+        # is_staff
+        # is_active
+        # date_joined
+        # is_superuser
+        username: str = request.GET.get('username')
+        first_name: str = request.GET.get('first_name')
+        last_name: str = request.GET.get('last_name')
+        email: str = request.GET.get('email')
+        filtered = False
+        founds = User.objects.all()
+        if username:
+            try:
+                username = username.strip()
+                founds = founds.filter(username=username)
+                filtered = True
+            except Exception as e:
+                return JsonResponse({"error": f"error retrieving user for {username=}"}, status=400, safe=False)
+        if first_name:
+            try:
+                first_name = first_name.strip()
+                founds = founds.filter(first_name=first_name)
+                filtered = True
+            except Exception as e:
+                return JsonResponse({"error": f"error retrieving user for {first_name=}"}, status=400, safe=False)
+        if last_name:
+            try:
+                last_name = last_name.strip()
+                founds = founds.filter(last_name=last_name)
+                filtered = True
+            except Exception as e:
+                return JsonResponse({"error": f"error retrieving user for {last_name=}"}, status=400, safe=False)
+        if email:
+            try:
+                email = email.strip()
+                founds = founds.filter(email=email)
+                filtered = True
+            except Exception as e:
+                return JsonResponse({"error": f"error retrieving user for {last_name=}"}, status=400, safe=False)
+        if filtered:
+            return JsonResponse({"message": "success", "data": [model_to_dict(instance) for instance in founds]}, status=200, safe=False)
+        else:
+            return JsonResponse(    {   "message": "require at least 1 filter among email|last_name|first_name|username",
+                                        "data": [model_to_dict(instance) for instance in founds]
+                                    },
+                                    status=200, safe=False
+                                )
     if request.method == 'POST':
         body = request.body
         creds = JSONParser().parse(io.BytesIO(body))

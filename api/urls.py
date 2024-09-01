@@ -32,7 +32,7 @@ urlpatterns = [
 
     path('tests/reset/org', orgs_view.reset_tests),
     path('tests/reset/security', user_view.reset_tests_security),
-    path('tests/reset/users/preference', user_preferences_view.reset_tests),
+    # path('tests/reset/users/preference', user_preferences_view.reset_tests),
     path("seed/default_users", user_view.seed_default_users),
     path("seed/default_orgs", user_view.seed_default_orgs),
     path("seed/default_user_orgs", user_view.seed_default_user_orgs),

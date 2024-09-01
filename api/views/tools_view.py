@@ -81,23 +81,30 @@ def tools(request: HttpRequest, *args, **kwargs):
         else:
             return JsonResponse({"detail": f"require name for tool, found {name=}"}, status=400, safe=False)
     if request.method == 'GET':
-        name = request.query_params['name'] if 'name' in request.query_params else None
-        facility_id = request.query_params['facility_id'] if 'facility_id' in request.query_params else None
-        if name is not None:
-            found = Tool.objects.filter(name=name).first()
-            if found is not None:
-                return JsonResponse({
-                    "message": "success",
-                    "matched": model_to_dict(found, fields=[field.name for field in found._meta.fields])
-                }, status=200)
-        if facility_id is not None:
-                founds = Tool.objects.filter(facility_id=facility_id)
-                if founds is not None:
+        name = request.GET.get('name')
+        id = request.GET.get('id')
+        if id:
+            try:
+                id = int(id)
+                found = Tool.objects.get(pk=id, deleted=False)
+                if found:
+                    return JsonResponse(model_to_dict(found), status=200, safe=False)
+                else:
+                    return JsonResponse({"message": f"not found for {id=}"}, status=404, safe=False)
+            except Exception as e:
+                return JsonResponse({"message": f"error retrieving tool for {id=}"}, status=400, safe=False)
+        if name:
+            if len(name.strip()) > 0:
+                founds = Tool.objects.filter(name__contains=name.strip(), deleted=False)
+                if founds:
                     return JsonResponse({
                         "message": "success",
-                        "matched": [model_to_dict(found, fields=[field.name for field in found._meta.fields]) for found in founds]
-                    }, status=200)
-
+                        "matched": [model_to_dict(instance) for instance in founds]
+                    }, status=200, safe=False)
+                else:
+                    return JsonResponse([], status=200, safe=False)
+            else:
+                return JsonResponse({"message": f"error retrieving tool for {name=}"}, status=400, safe=False)
         else:
             return JsonResponse({
                 "message": "require name or facility_id for tool query"
