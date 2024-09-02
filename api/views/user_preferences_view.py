@@ -68,11 +68,9 @@ def preferences(request: HttpRequest, *args, **kwargs):
             return JsonResponse({"error": f"require id, to delete {id=}"}, status=400, safe=False)
 
     if request.method == 'POST':
-        user_id: str = request.data.get('user_id')
+        user_id = request.data.get('user_id')
         name: str = request.data.get('name')
         value: str = request.data.get('value')
-        if not user_id or len(user_id.strip()) == 0:
-            return JsonResponse({"error": f"require user_id, found {user_id=}"}, status=400, safe=False)
         if not name or len(name.strip()) == 0:
             return JsonResponse({"error": f"require name, found {name=}"}, status=400, safe=False)
         if not value or len(value.strip()) == 0:
