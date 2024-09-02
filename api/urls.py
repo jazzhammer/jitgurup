@@ -2,10 +2,11 @@ from django.urls import path
 
 from .views import user_view, user_preferences_view, orgs_view, security_permissions_view, facilitys_view, \
     meetup_spots_view, spot_types_view, user_persons_view, user_meetup_spots_view, persons_view, org_persons_view, \
-    meetup_templates_view, tools_view
+    meetup_templates_view, tools_view, focuss_view
 
 urlpatterns = [
     path('facilitys', facilitys_view.facilitys),
+    path('focuss', focuss_view.focuss),
     path('facility/<int:facility_id>', facilitys_view.facility),
     path('meetup_spots', meetup_spots_view.meetup_spots),
     path('meetup_spot/<int:meetup_spot_id>', meetup_spots_view.meetup_spot),
