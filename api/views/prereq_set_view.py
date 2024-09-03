@@ -87,5 +87,5 @@ def put_prereq_sets(request: HttpRequest):
     found.save()
     return JsonResponse({
         "message": f"success",
-        "created": model_to_dict(found)
+        "updated": model_to_dict(found)
     }, status=200, safe=False)
