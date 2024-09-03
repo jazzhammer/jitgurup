@@ -17,27 +17,86 @@ def meetup_template(request, meetup_template_id):
             "message": "failure"
         }, status=404)
 
-@api_view(['POST', 'GET'])
+@api_view(['POST', 'GET', 'PUT', 'DELETE'])
 def meetup_templates(request, *args, **kwargs):
+    if request.method == 'DELETE':
+        id = request.GET.get('id')
+        if id:
+            try:
+                found = MeetupTemplate.objects.get(pk=id)
+            except:
+                return JsonResponse({
+                    "error": f"meetup_template not found for {id=}",
+                }, status=404)
+            found.deleted = True
+            found.save()
+            return JsonResponse({
+                "message": "success",
+                "deleted": model_to_dict(found)
+            }, status=200)
+        else:
+            return JsonResponse({
+                "error": f"meetup_template not found for {id=}",
+            }, status=404)
+
+    if request.method == 'PUT':
+        id = request.data.get('id')
+        if id:
+            try:
+                found = MeetupTemplate.objects.get(pk=id)
+            except:
+                return JsonResponse({
+                    "error": f"meetup_template not found for {id=}",
+                }, status=404)
+            name: str = request.data.get('name')
+            if name:
+                try:
+                    already = MeetupTemplate.objects.get(name__iexact=name.strip())
+                except:
+                    # ok. not a dupe if we change to this name
+                    found.name = name.strip()
+                    found.save()
+                    return JsonResponse({
+                        "message": "success",
+                        "updated": model_to_dict(found)
+                    }, status=201)
+                if already:
+                    # return the one we already have
+                    already.deleted = False
+                    already.save()
+                    return JsonResponse({
+                        "message": "success",
+                        "updated": model_to_dict(already)
+                    }, status=200)
+            else:
+                # noop
+                return JsonResponse({
+                    "message": "success",
+                    "updated": model_to_dict(found)
+                }, status=200)
+
     if request.method == 'POST':
-        newMeetupTemplate = JSONParser().parse(request)
-        already = MeetupTemplate.objects.filter(name=newMeetupTemplate['name']).first()
-        if already is None:
-            # serializer = MeetupTemplateSerializer(data=newMeetupTemplate)
-            # if serializer.is_valid():
-                created = MeetupTemplate.objects.create({})
+        name = request.data.get('name')
+        if name and len(name.strip()) > 0:
+            try:
+                already = MeetupTemplate.objects.get(name__iexact=name.strip())
+            except:
+                # good, not exist
+                created = MeetupTemplate.objects.create(name=name)
                 return JsonResponse({
                     "message": "success",
                     "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
                 }, status=201)
-            # else:
-            #     return JsonResponse({
-            #         "message": "failure"
-            #     }, status=400)
+            else:
+                already.deleted = False
+                already.save()
+                return JsonResponse({
+                    "message": "previously created",
+                    "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
+                }, status=200)
         else:
             return JsonResponse({
-                "message": "previously created",
-                "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
+                "error": f"require name for meetup_template, found {name=}",
             }, status=200)
 
     if request.method == 'GET':
