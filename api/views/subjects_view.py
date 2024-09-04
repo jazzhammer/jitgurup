@@ -97,8 +97,10 @@ def subjects(request: HttpRequest, *args, **kwargs):
                     "message": f"no subject of name {name} found"
                 }, status=404)
         else:
+            founds = Subject.objects.all()[:10]
             return JsonResponse({
-                "message": f"require name to search for Subject"
-            }, status=400)
+                "message": "success",
+                "matched": [model_to_dict(instance) for instance in founds]
+            }, status=200)
 
 

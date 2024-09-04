@@ -2,6 +2,7 @@ import io
 import json
 
 import psycopg2
+from django.db.models import QuerySet
 from django.forms import model_to_dict
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
@@ -56,27 +57,81 @@ def org(request, org_id):
         }, status=404)
 
 
-@api_view(['POST', 'GET'])
+@api_view(['POST', 'GET', 'PUT', 'DELETE'])
 def orgs(request, *args, **kwargs):
+    if request.method == 'DELETE':
+        id = request.GET.get('id')
+        found: QuerySet = Org.objects.get(pk=id)
+        if not found:
+            return JsonResponse({
+                "error": f"not found for {id=}"
+            }, status=404, safe=False)
+        else:
+            found.deleted = True
+            found.save()
+            return JsonResponse({
+                "message": f"success",
+                "deleted": model_to_dict(found)
+            }, status=200, safe=False)
+
+    if request.method == 'PUT':
+        id: int = request.data.get('id')
+        name: str = request.data.get('name')
+        description: str = request.data.get('description')
+        try:
+            found = Org.objects.get(pk=id)
+        except:
+            return JsonResponse({
+                "error": f"unable to update org not found for {id=}"
+            }, status=404)
+        if name:
+            if len(name.strip()) > 0:
+                name = name.strip()
+                found.name = name
+        if description:
+            if len(description.strip()) > 0:
+                description = description.strip()
+                found.description = description
+        found.save()
+        return JsonResponse({
+            "message": "updated ord",
+            "updated": model_to_dict(found)
+        }, status=200)
+
+
     if request.method == 'POST':
-        newOrg = JSONParser().parse(request)
-        if 'name' in newOrg:
-            already = Org.objects.filter(name=newOrg['name']).first()
-            if already is None:
-                created = Org.objects.create(name=newOrg['name'], description=newOrg['description'])
-                return JsonResponse({
-                    "message": "created Org",
-                    "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
-                }, status=200)
-            else:
+        name: str = request.data.get('name')
+        if name:
+            if len(name.strip()) > 0:
+                name = name.strip()
+                try:
+                    already = Org.objects.get(name__iexact=name)
+                except:
+                    try:
+                        description = request.data.get('description')
+                    except:
+                        pass
+                    if description is None:
+                        description = 'this org requires a description'
+                    created = Org.objects.create(name=name, description=description)
+
+                    return JsonResponse({
+                        "message": "created Org",
+                        "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
+                    }, status=201)
                 return JsonResponse({
                     "message": "created Org",
                     "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
                 }, status=200)
+            else:
+                return JsonResponse({
+                    "message": f"unable to create for blank name, found {name=}"
+                }, status=400)
         else:
             return JsonResponse({
                 "message": "unable to create for missing minimum fields"
             }, status=400)
+
     elif request.method == 'GET':
         name = request.query_params['name']
         if name is not None:
