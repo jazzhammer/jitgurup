@@ -27,6 +27,9 @@ def update_default_prereq_set(updatable):
 
 def create_default_prereq_set():
     meetup_template = create_default_meetup_template()
+    return create_default_prereq_set_for_template(meetup_template)
+
+def create_default_prereq_set_for_template(meetup_template):
     response = requests.post(url_test, data={
         'required_by_id': meetup_template.get('id')
     })

@@ -38,6 +38,7 @@ def get_prereq_sets(request: HttpRequest):
         "message": f"success",
         "matched": [model_to_dict(instance) for instance in founds]
     }, status=200, safe=False)
+
 def post_prereq_sets(request: HttpRequest):
     required_by_id = request.data.get('required_by_id')
     if required_by_id:
@@ -51,6 +52,7 @@ def post_prereq_sets(request: HttpRequest):
         "message": f"success",
         "created": model_to_dict(created)
     }, status=200, safe=False)
+
 def delete_prereq_sets(request: HttpRequest):
     id = request.GET.get('id')
     found: QuerySet = PrereqSet.objects.get(pk=id)
@@ -65,6 +67,7 @@ def delete_prereq_sets(request: HttpRequest):
             "message": f"success",
             "deleted": model_to_dict(found)
         }, status=200, safe=False)
+
 def put_prereq_sets(request: HttpRequest):
     id = request.data.get('id')
     found = PrereqSet.objects.get(pk=id)
