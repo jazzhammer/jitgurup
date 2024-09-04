@@ -1,9 +1,11 @@
+from django.db.models import QuerySet
 from django.forms import model_to_dict
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 
 from api.models.facility import Facility
+from api.models.org import Org
 from api.serializers.facility_serializer import FacilitySerializer
 
 @api_view(['GET'])
@@ -23,31 +25,114 @@ def reset_tests(request):
         "message": "success"
     }, status=200)
 
-@api_view(['POST', 'GET'])
+@api_view(['POST', 'GET', 'PUT', 'DELETE'])
 def facilitys(request, *args, **kwargs):
-    if request.method == 'POST':
-        newFacility = JSONParser().parse(request)
-        already = Facility.objects.filter(name=newFacility['name']).first()
-        if not already:
-            serializer = FacilitySerializer(data=newFacility)
-            if serializer.is_valid():
-                name = newFacility.get('name')
-                description = newFacility.get('description')
-                org_id = newFacility.get('org_id')
-                created = Facility.objects.create(name=name, description=description, org_id=org_id)
+    if request.method == 'DELETE':
+        id: int = request.GET.get('id')
+        try:
+            found = Facility.objects.get(pk=id)
+        except:
+            return JsonResponse({
+                "error": f"facility not found for update {id=}",
+            }, status=404, safe=False)
+        found.deleted = True
+        found.save()
+        return JsonResponse({
+            "message": "success",
+            "deleted": model_to_dict(found)
+        }, status=200, safe=False)
+
+    if request.method == 'PUT':
+        id: int = request.data.get('id')
+        name: str = request.data.get('name')
+        description: str = request.data.get('description')
+        org_id: int = request.data.get('org_id')
+        try:
+            found = Facility.objects.get(pk=id)
+        except:
+            return JsonResponse({
+                "error": f"facility not found for update {id=}",
+            }, status=404, safe=False)
+        dupes: QuerySet = Facility.objects.all()
+        dupes.exclude(id=id)
+        if name:
+            if len(name.strip()) <= 0:
                 return JsonResponse({
-                    "message": "success",
-                    "created": model_to_dict(created)
-                }, status=201, safe=False)
+                    "error": f"require name",
+                }, status=400, safe=False)
             else:
+                dupes = dupes.filter(name=name)
+        if org_id:
+            try:
+                org = Org.objects.get(pk=org_id)
+            except:
                 return JsonResponse({
-                    "message": "failure"
-                }, status=400)
+                    "error": f"require valid org_id to update org_id, found {org_id=}",
+                }, status=400, safe=False)
+            dupes = dupes.filter(org_id=org_id)
+        if dupes and dupes.count() > 0:
+            return JsonResponse({
+                "error": f"already facility {name=} for {org_id=}",
+            }, status=400, safe=False)
+        if description:
+            if len(description.strip()) <= 0:
+                description = description.strip()
+                return JsonResponse({
+                    "error": f"require non blank description if provided",
+                }, status=400, safe=False)
+        found.name = name
+        found.description = description
+        found.org = org
+        found.deleted = False
+        return JsonResponse({
+            "message": "success",
+            "updated": model_to_dict(found)
+        }, status=200, safe=False)
+
+    if request.method == 'POST':
+        name: str = request.data.get('name')
+        description: str = request.data.get('description')
+        org_id: str = request.data.get('org_id')
+        dupes: QuerySet = Facility.objects.all()
+        if name:
+            if len(name.strip()) <= 0:
+                return JsonResponse({
+                    "error": f"require name",
+                }, status=400, safe=False)
+            else:
+                dupes = dupes.filter(name__iexact=name.strip())
         else:
             return JsonResponse({
-                "message": "previously created",
-                "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
-            }, status=200)
+                "error": f"facility requires name, found {name=}",
+            }, status=400, safe=False)
+
+        if org_id:
+            try:
+                org = Org.objects.get(pk=org_id)
+            except:
+                return JsonResponse({
+                    "error": f"require valid org_id to update org_id, found {org_id=}",
+                }, status=400, safe=False)
+            dupes = dupes.filter(org_id=org_id)
+        else:
+            return JsonResponse({
+                "error": f"facility requires name, found {name=}",
+            }, status=400, safe=False)
+
+        if dupes and dupes.count() > 0:
+            for dupe in dupes:
+                if dupe.deleted:
+                    dupe.deleted = False
+                    dupe.save()
+                    return JsonResponse({
+                        "message": "success",
+                        "created": model_to_dict(dupe)
+                    }, status=201, safe=False)
+        created = Facility.objects.create(name=name, org=org, description=description)
+        return JsonResponse({
+            "message": "success",
+            "created": model_to_dict(created)
+        }, status=201, safe=False)
 
     if request.method == 'GET':
         name = request.GET.get('name')
@@ -57,7 +142,7 @@ def facilitys(request, *args, **kwargs):
             if found:
                 return JsonResponse({
                     "message": "success",
-                    "matched": model_to_dict(found, fields=[field.name for field in found._meta.fields])
+                    "matched": [model_to_dict(found)]
                 }, status=200, safe=False)
             else:
                 return JsonResponse({
