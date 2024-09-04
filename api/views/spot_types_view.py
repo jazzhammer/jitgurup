@@ -1,6 +1,7 @@
 import io
 
 import psycopg2
+from django.db.models import QuerySet
 from django.forms import model_to_dict
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
@@ -50,43 +51,98 @@ def spot_type(request, spot_type_id):
         }, status=404)
 
 
-@api_view(['POST', 'GET'])
-def spot_types(request, *args, **kwargs):
+@api_view(['POST', 'GET', 'PUT', 'DELETE'])
+def spot_types(request):
+    if request.method == 'DELETE':
+        id: int = request.GET.get('id')
+        try:
+            found = SpotType.objects.get(pk=id)
+        except:
+            return JsonResponse({
+                "error": f"spot_type not found for update {id=}",
+            }, status=404, safe=False)
+        found.deleted = True
+        found.save()
+        return JsonResponse({
+            "message": "success",
+            "deleted": model_to_dict(found)
+        }, status=200, safe=False)
+
+    if request.method == 'PUT':
+        id: int = request.data.get('id')
+        name: str = request.data.get('name')
+        description: str = request.data.get('description')
+        try:
+            found = SpotType.objects.get(pk=id)
+        except:
+            return JsonResponse({
+                "error": f"spot_Type not found for update {id=}",
+            }, status=404, safe=False)
+        dupes: QuerySet = SpotType.objects.all()
+        dupes.exclude(id=id)
+        if name:
+            if len(name.strip()) <= 0:
+                return JsonResponse({
+                    "error": f"require name",
+                }, status=400, safe=False)
+            else:
+                dupes = dupes.filter(name=name)
+        if dupes and dupes.count() > 0:
+            return JsonResponse({
+                "error": f"already a spot_Type {name=}",
+            }, status=400, safe=False)
+        if description:
+            description = description.strip()
+            if len(description) <= 0:
+                return JsonResponse({
+                    "error": f"require non blank description if provided",
+                }, status=400, safe=False)
+
+        found.name = name
+        found.description = description
+        found.deleted = False
+        return JsonResponse({
+            "message": "success",
+            "updated": model_to_dict(found)
+        }, status=200, safe=False)
+
     if request.method == 'POST':
-        newSpotType = JSONParser().parse(request)
-        if 'name' in newSpotType:
-            already = SpotType.objects.filter(name=newSpotType['name']).first()
-            if already is None:
-                created = SpotType.objects.create(name=newSpotType['name'], description=newSpotType['description'])
+        name: str = request.data.get('name')
+        description: str = request.data.get('description')
+        dupes: QuerySet = SpotType.objects.all()
+        if name:
+            if len(name.strip()) <= 0:
                 return JsonResponse({
-                    "message": "created SpotType",
-                    "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
-                }, status=200)
+                    "error": f"require name",
+                }, status=400, safe=False)
             else:
-                return JsonResponse({
-                    "message": "created SpotType",
-                    "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
-                }, status=200)
+                dupes = dupes.filter(name__iexact=name.strip())
         else:
             return JsonResponse({
-                "message": "unable to create for missing minimum fields"
-            }, status=400)
-    elif request.method == 'GET':
-        name = request.query_params['name']
-        if name is not None:
-            found = SpotType.objects.filter(name=name).first()
-            if found is not None:
+                "error": f"spot_type requires name, found {name=}",
+            }, status=400, safe=False)
+
+        if description:
+            if len(description.strip()) <= 0:
                 return JsonResponse({
-                    "matched": model_to_dict(found, fields=[field.name for field in found._meta.fields])
-                }, status=200)
-            else:
-                return JsonResponse({
-                    "message": f"no spot_type of name {name} found"
-                }, status=404)
-        else:
-            return JsonResponse({
-                "message": f"require name to search for an SpotType"
-            }, status=400)
+                    "error": f"require valid description if provided, found {description=}",
+                }, status=400, safe=False)
+
+        if dupes and dupes.count() > 0:
+            for dupe in dupes:
+                if dupe.deleted:
+                    dupe.deleted = False
+                    dupe.save()
+                    return JsonResponse({
+                        "message": "success",
+                        "created": model_to_dict(dupe)
+                    }, status=201, safe=False)
+        created = SpotType.objects.create(name=name, description=description)
+        return JsonResponse({
+            "message": "success",
+            "created": model_to_dict(created)
+        }, status=201, safe=False)
+
 
 
 @api_view(["GET", "POST"])
