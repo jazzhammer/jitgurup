@@ -4,12 +4,12 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 
 
-from api.models.facility import Facility
-from api.models.org import Org
+from api.models.template_role import TemplateRole
+from api.models.crew_template import CrewTemplate
 
 @api_view(['GET'])
-def facility(request, facility_id):
-    found = Facility.objects.get(id=facility_id)
+def template_role(request, template_role_id):
+    found = TemplateRole.objects.get(id=template_role_id)
     if found is not None:
         return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200)
     else:
@@ -19,20 +19,20 @@ def facility(request, facility_id):
 
 @api_view(['POST'])
 def reset_tests(request):
-    Facility.objects.all().delete()
+    TemplateRole.objects.all().delete()
     return JsonResponse({
         "message": "success"
     }, status=200)
 
 @api_view(['POST', 'GET', 'PUT', 'DELETE'])
-def facilitys(request, *args, **kwargs):
+def template_roles(request, *args, **kwargs):
     if request.method == 'DELETE':
         id: int = request.GET.get('id')
         try:
-            found = Facility.objects.get(pk=id)
+            found = TemplateRole.objects.get(pk=id)
         except:
             return JsonResponse({
-                "error": f"facility not found for update {id=}",
+                "error": f"template_role not found for update {id=}",
             }, status=404, safe=False)
         found.deleted = True
         found.save()
@@ -45,14 +45,14 @@ def facilitys(request, *args, **kwargs):
         id: int = request.data.get('id')
         name: str = request.data.get('name')
         description: str = request.data.get('description')
-        org_id: int = request.data.get('org_id')
+        crew_template_id: int = request.data.get('crew_template_id')
         try:
-            found = Facility.objects.get(pk=id)
+            found = TemplateRole.objects.get(pk=id)
         except:
             return JsonResponse({
-                "error": f"facility not found for update {id=}",
+                "error": f"template_role not found for update {id=}",
             }, status=404, safe=False)
-        dupes: QuerySet = Facility.objects.all()
+        dupes: QuerySet = TemplateRole.objects.all()
         dupes.exclude(id=id)
         if name:
             if len(name.strip()) <= 0:
@@ -61,17 +61,17 @@ def facilitys(request, *args, **kwargs):
                 }, status=400, safe=False)
             else:
                 dupes = dupes.filter(name=name)
-        if org_id:
+        if crew_template_id:
             try:
-                org = Org.objects.get(pk=org_id)
+                crew_template = CrewTemplate.objects.get(pk=crew_template_id)
             except:
                 return JsonResponse({
-                    "error": f"require valid org_id to update org_id, found {org_id=}",
+                    "error": f"require valid crew_template_id to update crew_template_id, found {crew_template_id=}",
                 }, status=400, safe=False)
-            dupes = dupes.filter(org_id=org_id)
+            dupes = dupes.filter(crew_template_id=crew_template_id)
         if dupes and dupes.count() > 0:
             return JsonResponse({
-                "error": f"already facility {name=} for {org_id=}",
+                "error": f"already template_role {name=} for {crew_template_id=}",
             }, status=400, safe=False)
         if description:
             if len(description.strip()) <= 0:
@@ -81,7 +81,7 @@ def facilitys(request, *args, **kwargs):
                 }, status=400, safe=False)
         found.name = name
         found.description = description
-        found.org = org
+        found.crew_template = crew_template
         found.deleted = False
         return JsonResponse({
             "message": "success",
@@ -91,8 +91,8 @@ def facilitys(request, *args, **kwargs):
     if request.method == 'POST':
         name: str = request.data.get('name')
         description: str = request.data.get('description')
-        org_id: str = request.data.get('org_id')
-        dupes: QuerySet = Facility.objects.all()
+        crew_template_id: str = request.data.get('crew_template_id')
+        dupes: QuerySet = TemplateRole.objects.all()
         if name:
             if len(name.strip()) <= 0:
                 return JsonResponse({
@@ -102,20 +102,20 @@ def facilitys(request, *args, **kwargs):
                 dupes = dupes.filter(name__iexact=name.strip())
         else:
             return JsonResponse({
-                "error": f"facility requires name, found {name=}",
+                "error": f"template_role requires name, found {name=}",
             }, status=400, safe=False)
 
-        if org_id:
+        if crew_template_id:
             try:
-                org = Org.objects.get(pk=org_id)
+                crew_template = CrewTemplate.objects.get(pk=crew_template_id)
             except:
                 return JsonResponse({
-                    "error": f"require valid org_id to update org_id, found {org_id=}",
+                    "error": f"require valid crew_template_id to update crew_template_id, found {crew_template_id=}",
                 }, status=400, safe=False)
-            dupes = dupes.filter(org_id=org_id)
+            dupes = dupes.filter(crew_template_id=crew_template_id)
         else:
             return JsonResponse({
-                "error": f"facility requires name, found {name=}",
+                "error": f"template_role requires name, found {name=}",
             }, status=400, safe=False)
 
         if dupes and dupes.count() > 0:
@@ -127,7 +127,7 @@ def facilitys(request, *args, **kwargs):
                         "message": "success",
                         "created": model_to_dict(dupe)
                     }, status=201, safe=False)
-        created = Facility.objects.create(name=name, org=org, description=description)
+        created = TemplateRole.objects.create(name=name, crew_template=crew_template, description=description)
         return JsonResponse({
             "message": "success",
             "created": model_to_dict(created)
@@ -135,9 +135,9 @@ def facilitys(request, *args, **kwargs):
 
     if request.method == 'GET':
         name = request.GET.get('name')
-        org_id = request.GET.get('org_id')
+        crew_template_id = request.GET.get('crew_template_id')
         if name:
-            found = Facility.objects.filter(name=name).first()
+            found = TemplateRole.objects.filter(name=name).first()
             if found:
                 return JsonResponse({
                     "message": "success",
@@ -148,8 +148,8 @@ def facilitys(request, *args, **kwargs):
                     "message": "success",
                     "matched": []
                 }, status=200, safe=False)
-        if org_id:
-                founds = Facility.objects.filter(org_id=org_id)
+        if crew_template_id:
+                founds = TemplateRole.objects.filter(crew_template_id=crew_template_id)
                 if founds:
                     return JsonResponse({
                         "message": "success",
@@ -163,5 +163,5 @@ def facilitys(request, *args, **kwargs):
 
         else:
             return JsonResponse({
-                "message": "require name or org_id for facility query"
+                "message": "require name or crew_template_id for template_role query"
             }, status=400, safe=False)

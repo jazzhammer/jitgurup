@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 
+from api.models.crew_template import CrewTemplate
 from api.models.meetup_template import MeetupTemplate
 # from api.serializers.meetup_template_serializer import MeetupTemplateSerializer
 
@@ -49,12 +50,20 @@ def meetup_templates(request, *args, **kwargs):
                     "error": f"meetup_template not found for {id=}",
                 }, status=404)
             name: str = request.data.get('name')
+            crew_template_id: int = request.data.get('crew_template_id')
             if name:
                 try:
                     already = MeetupTemplate.objects.get(name__iexact=name.strip())
                 except:
                     # ok. not a dupe if we change to this name
                     found.name = name.strip()
+                    if crew_template_id:
+                        try:
+                            found.crew_template = CrewTemplate.objects.get(pk=crew_template_id)
+                        except:
+                            return JsonResponse({
+                                "error": f"crew_template not found for {crew_template_id=}",
+                            }, status=404)
                     found.save()
                     return JsonResponse({
                         "message": "success",
@@ -63,6 +72,13 @@ def meetup_templates(request, *args, **kwargs):
                 if already:
                     # return the one we already have
                     already.deleted = False
+                    if crew_template_id:
+                        try:
+                            already.crew_template = CrewTemplate.objects.get(pk=crew_template_id)
+                        except:
+                            return JsonResponse({
+                                "error": f"crew_template not found for {crew_template_id=}",
+                            }, status=404)
                     already.save()
                     return JsonResponse({
                         "message": "success",
@@ -77,18 +93,33 @@ def meetup_templates(request, *args, **kwargs):
 
     if request.method == 'POST':
         name = request.data.get('name')
+        crew_template_id: int = request.data.get('crew_template_id')
         if name and len(name.strip()) > 0:
             try:
                 already = MeetupTemplate.objects.get(name__iexact=name.strip())
             except:
                 # good, not exist
                 created = MeetupTemplate.objects.create(name=name)
+                if crew_template_id:
+                    try:
+                        created.crew_template = CrewTemplate.objects.get(pk=crew_template_id)
+                    except:
+                        return JsonResponse({
+                            "error": f"crew_template not found for {crew_template_id=}",
+                        }, status=404)
                 return JsonResponse({
                     "message": "success",
                     "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
                 }, status=201)
             else:
                 already.deleted = False
+                if crew_template_id:
+                    try:
+                        already.crew_template = CrewTemplate.objects.get(pk=crew_template_id)
+                    except:
+                        return JsonResponse({
+                            "error": f"crew_template not found for {crew_template_id=}",
+                        }, status=404)
                 already.save()
                 return JsonResponse({
                     "message": "previously created",
