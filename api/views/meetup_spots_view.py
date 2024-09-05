@@ -1,9 +1,12 @@
+from django.db.models import QuerySet
 from django.forms import model_to_dict
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 
+from api.models.facility import Facility
 from api.models.meetup_spot import MeetupSpot
+from api.models.spot_type import SpotType
 from api.serializers.meetup_spot_serializer import MeetupSpotSerializer
 
 
@@ -24,28 +27,150 @@ def reset_tests(request):
         "message": "success"
     }, status=200)
 
-@api_view(['POST', 'GET'])
+@api_view(['POST', 'GET', 'PUT', 'DELETE'])
 def meetup_spots(request, *args, **kwargs):
-    if request.method == 'POST':
-        newMeetupSpot = JSONParser().parse(request)
-        already = MeetupSpot.objects.filter(name=newMeetupSpot['name']).first()
-        if already is None:
-            serializer = MeetupSpotSerializer(data=newMeetupSpot)
-            if serializer.is_valid():
-                created = MeetupSpot.objects.create(**serializer.validated_data)
+    if request.method == 'DELETE':
+        id: int = request.GET.get('id')
+        try:
+            found = MeetupSpot.objects.get(pk=id)
+        except:
+            return JsonResponse({
+                "error": f"meetup_spot not found for delete {id=}",
+            }, status=404, safe=False)
+        found.deleted = True
+        found.save()
+        return JsonResponse({
+            "message": "success",
+            "deleted": model_to_dict(found)
+        }, status=200, safe=False)
+
+
+
+    if request.method == 'PUT':
+        id: int = request.data.get('id')
+        name: str = request.data.get('name')
+        description: str = request.data.get('description')
+        facility_id: int = request.data.get('facility_id')
+        spot_type_id: int = request.data.get('spot_type_id')
+        try:
+            found = MeetupSpot.objects.get(pk=id)
+        except:
+            return JsonResponse({
+                "error": f"meetup_spot not found for update {id=}",
+            }, status=404, safe=False)
+        dupes: QuerySet = MeetupSpot.objects.all()
+        dupes.exclude(id=id)
+        if name:
+            if len(name.strip()) <= 0:
                 return JsonResponse({
-                    "message": "success",
-                    "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
-                }, status=201)
+                    "error": f"require name",
+                }, status=400, safe=False)
             else:
+                dupes = dupes.filter(name=name)
+        if facility_id:
+            facility_id = int(facility_id)
+            try:
+                facility = Facility.objects.get(pk=facility_id)
+            except:
                 return JsonResponse({
-                    "message": "failure"
-                }, status=400)
+                    "error": f"require valid facility_id to update meetup_spot, found {facility_id=}",
+                }, status=400, safe=False)
+            dupes = dupes.filter(facility_id=facility_id)
+
+        if spot_type_id:
+            spot_type_id = int(spot_type_id)
+            try:
+                spot_type = SpotType.objects.get(pk=spot_type_id)
+            except:
+                return JsonResponse({
+                    "error": f"require valid spot_type_id to update meetup_spot, found {spot_type_id=}",
+                }, status=400, safe=False)
+            dupes = dupes.filter(spot_type_id=spot_type_id)
+
+        if dupes and dupes.count() > 0:
+            return JsonResponse({
+                "error": f"already meetup_spot {name=} for {facility_id=}, {spot_type_id=}",
+            }, status=400, safe=False)
+
+        if description:
+            if len(description.strip()) <= 0:
+                description = description.strip()
+                return JsonResponse({
+                    "error": f"require non blank description if provided",
+                }, status=400, safe=False)
+        found.name = name
+        found.description = description
+        found.facility = facility
+        found.spot_type = spot_type
+        found.deleted = False
+        found.save()
+        return JsonResponse({
+            "message": "success",
+            "updated": model_to_dict(found)
+        }, status=200, safe=False)
+
+    if request.method == 'POST':
+        name: str = request.data.get('name')
+        description: str = request.data.get('description')
+        spot_type_id: int = request.data.get('spot_type_id')
+        facility_id: int = request.data.get('facility_id')
+
+        dupes: QuerySet = MeetupSpot.objects.all()
+        if name:
+            if len(name.strip()) <= 0:
+                return JsonResponse({
+                    "error": f"require name",
+                }, status=400, safe=False)
+            else:
+                dupes = dupes.filter(name__iexact=name.strip())
         else:
             return JsonResponse({
-                "message": "previously created",
-                "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
-            }, status=200)
+                "error": f"spot_type requires name, found {name=}",
+            }, status=400, safe=False)
+
+        if not spot_type_id:
+            return JsonResponse({
+                "error": f"require spot_type, found {spot_type_id=}",
+            }, status=400, safe=False)
+        else:
+            spot_type_id = int(spot_type_id)
+            dupes = dupes.filter(spot_type_id=spot_type_id)
+
+        if not facility_id:
+            return JsonResponse({
+                "error": f"require facility, found {facility_id=}",
+            }, status=400, safe=False)
+        else:
+            facility_id = int(facility_id)
+            dupes = dupes.filter(facility_id=facility_id)
+
+        if description:
+            if len(description.strip()) <= 0:
+                return JsonResponse({
+                    "error": f"require valid description if provided, found {description=}",
+                }, status=400, safe=False)
+
+        if dupes and dupes.count() > 0:
+            for dupe in dupes:
+                if dupe.deleted:
+                    dupe.deleted = False
+                    dupe.save()
+                    return JsonResponse({
+                        "message": "success",
+                        "created": model_to_dict(dupe)
+                    }, status=201, safe=False)
+
+        created = MeetupSpot.objects.create(
+            name=name,
+            description=description.strip(),
+            spot_type_id=spot_type_id,
+            facility_id=facility_id
+        )
+        return JsonResponse({
+            "message": "success",
+            "created": model_to_dict(created)
+        }, status=201, safe=False)
+
 
     if request.method == 'GET':
         name = request.query_params['name'] if 'name' in request.query_params else None

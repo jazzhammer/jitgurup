@@ -48,6 +48,9 @@ def delete_facility(facility):
     return deleted
 
 def create_default_facility():
+    return create_default_facility_for_name_description(TEST_FACILITY_NAME, TEST_FACILITY_DESCRIPTION)
+
+def create_default_facility_for_name_description(name: str, description: str):
     org = create_default_org()
     alreadys = get_facility_for_name_org(TEST_FACILITY_NAME, org.get('id'))
     matches = alreadys.get('matched')
@@ -55,8 +58,8 @@ def create_default_facility():
         delete_facility(match)
 
     response = requests.post(url_test, data={
-        'name': TEST_FACILITY_NAME,
-        'description': TEST_FACILITY_DESCRIPTION,
+        'name': name,
+        'description': description,
         'org_id': org.get('id')
     })
     assert response.status_code < 300
@@ -64,14 +67,14 @@ def create_default_facility():
     created = details.get('created')
     updated = details.get('updated')
     if updated:
-        assert updated.get('name') == TEST_FACILITY_NAME
-        assert updated.get('description') == TEST_FACILITY_DESCRIPTION
+        assert updated.get('name') == name
+        assert updated.get('description') == description
         assert updated.get('org') == org.get('id')
         assert not updated.get('deleted')
         return updated
     if created:
-        assert created.get('name') == TEST_FACILITY_NAME
-        assert created.get('description') == TEST_FACILITY_DESCRIPTION
+        assert created.get('name') == name
+        assert created.get('description') == description
         assert created.get('org') == org.get('id')
         assert not created.get('deleted')
         return created
