@@ -10,10 +10,6 @@ from api.models.meetup_spot import MeetupSpot
 from api.models.meetup_template import MeetupTemplate
 from api.models.org import Org
 
-
-# from api.serializers.meetup_template_serializer import MeetupTemplateSerializer
-
-
 @api_view(['GET'])
 def meetup_template(request, meetup_template_id):
     found = MeetupTemplate.objects.get(id=meetup_template_id)

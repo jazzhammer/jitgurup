@@ -10,6 +10,8 @@ when instantiated:
 meetup -> crew -> roles 
 
 """
+
+
 class CrewTemplate(models.Model):
     name = models.CharField(max_length=128)
     deleted = models.BooleanField(default=False)
