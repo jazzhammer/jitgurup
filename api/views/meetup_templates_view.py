@@ -1,10 +1,16 @@
+from django.db.models import QuerySet
 from django.forms import model_to_dict
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
-from rest_framework.parsers import JSONParser
+
 
 from api.models.crew_template import CrewTemplate
+from api.models.facility import Facility
+from api.models.meetup_spot import MeetupSpot
 from api.models.meetup_template import MeetupTemplate
+from api.models.org import Org
+
+
 # from api.serializers.meetup_template_serializer import MeetupTemplateSerializer
 
 
@@ -42,113 +48,132 @@ def meetup_templates(request, *args, **kwargs):
 
     if request.method == 'PUT':
         id = request.data.get('id')
-        if id:
-            try:
-                found = MeetupTemplate.objects.get(pk=id)
-            except:
-                return JsonResponse({
-                    "error": f"meetup_template not found for {id=}",
-                }, status=404)
-            name: str = request.data.get('name')
-            crew_template_id: int = request.data.get('crew_template_id')
+        if not id:
+            return JsonResponse({
+                "error": f"meetup_template not found for {id=}",
+            }, status=404)
+
+        try:
+            found = MeetupTemplate.objects.get(pk=id)
+        except:
+            return JsonResponse({
+                "error": f"meetup_template not found for {id=}",
+            }, status=404)
+
+        name = request.data.get('name')
+        org_id: int = request.data.get('org_id')
+        facility_id: int = request.data.get('facility_id')
+        meetup_spot_id: int = request.data.get('meetup_spot_id')
+        crew_template_id: int = request.data.get('crew_template_id')
+
+        dupes: QuerySet = MeetupTemplate.objects.all().exclude(id=id)
+        if name and len(name.strip()) > 0:
+            dupes = dupes.filter(name__iexact=name)
+        else:
+            return JsonResponse({
+                "error": f"name required to find meetup_template, found: {name=}",
+            }, status=400)
+        if org_id:
+            dupes = dupes.filter(org_id=org_id)
+        if facility_id:
+            dupes = dupes.filter(facility_id=facility_id)
+        if meetup_spot_id:
+            dupes = dupes.filter(meetup_spot_id=meetup_spot_id)
+        if crew_template_id:
+            dupes = dupes.filter(crew_template_id=crew_template_id)
+        if dupes.count() > 0:
+            found = dupes.first()
+            found.deleted = False
+            found.save()
+            return JsonResponse({
+                "message": "success",
+                "updated": model_to_dict(found)
+            }, status=201)
+        else:
+            updated = MeetupTemplate.objects.get(pk=id)
+            if org_id:
+                updated.org = Org.objects.get(pk=org_id)
+            if facility_id:
+                updated.facility = Facility.objects.get(pk=facility_id)
+            if meetup_spot_id:
+                updated.meetup_spot = MeetupSpot.objects.get(pk=meetup_spot_id)
+            if crew_template_id:
+                updated.crew_template = CrewTemplate.objects.get(pk=crew_template_id)
             if name:
-                try:
-                    already = MeetupTemplate.objects.get(name__iexact=name.strip())
-                except:
-                    # ok. not a dupe if we change to this name
-                    found.name = name.strip()
-                    if crew_template_id:
-                        try:
-                            found.crew_template = CrewTemplate.objects.get(pk=crew_template_id)
-                        except:
-                            return JsonResponse({
-                                "error": f"crew_template not found for {crew_template_id=}",
-                            }, status=404)
-                    found.save()
-                    return JsonResponse({
-                        "message": "success",
-                        "updated": model_to_dict(found)
-                    }, status=201)
-                if already:
-                    # return the one we already have
-                    already.deleted = False
-                    if crew_template_id:
-                        try:
-                            already.crew_template = CrewTemplate.objects.get(pk=crew_template_id)
-                        except:
-                            return JsonResponse({
-                                "error": f"crew_template not found for {crew_template_id=}",
-                            }, status=404)
-                    already.save()
-                    return JsonResponse({
-                        "message": "success",
-                        "updated": model_to_dict(already)
-                    }, status=200)
-            else:
-                # noop
-                return JsonResponse({
-                    "message": "success",
-                    "updated": model_to_dict(found)
-                }, status=200)
+                updated.name = name
+            updated.save()
+            return JsonResponse({
+                "message": "success",
+                "updated": model_to_dict(updated)
+            }, status=201)
 
     if request.method == 'POST':
         name = request.data.get('name')
+        org_id: int = request.data.get('org_id')
+        facility_id: int = request.data.get('facility_id')
+        meetup_spot_id: int = request.data.get('meetup_spot_id')
         crew_template_id: int = request.data.get('crew_template_id')
+
+        dupes: QuerySet = MeetupTemplate.objects.filter(deleted=False)
         if name and len(name.strip()) > 0:
-            try:
-                already = MeetupTemplate.objects.get(name__iexact=name.strip())
-            except:
-                # good, not exist
-                created = MeetupTemplate.objects.create(name=name)
-                if crew_template_id:
-                    try:
-                        created.crew_template = CrewTemplate.objects.get(pk=crew_template_id)
-                    except:
-                        return JsonResponse({
-                            "error": f"crew_template not found for {crew_template_id=}",
-                        }, status=404)
-                return JsonResponse({
-                    "message": "success",
-                    "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
-                }, status=201)
-            else:
-                already.deleted = False
-                if crew_template_id:
-                    try:
-                        already.crew_template = CrewTemplate.objects.get(pk=crew_template_id)
-                    except:
-                        return JsonResponse({
-                            "error": f"crew_template not found for {crew_template_id=}",
-                        }, status=404)
-                already.save()
-                return JsonResponse({
-                    "message": "previously created",
-                    "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
-                }, status=200)
+            dupes = dupes.filter(name__iexact=name)
         else:
             return JsonResponse({
-                "error": f"require name for meetup_template, found {name=}",
-            }, status=200)
+                "error": f"name required for new meetup_template, found: {name=}",
+            }, status=404)
+        if org_id:
+            dupes = dupes.filter(org_id=org_id)
+        if facility_id:
+            dupes = dupes.filter(facility_id=facility_id)
+        if meetup_spot_id:
+            dupes = dupes.filter(meetup_spot_id=meetup_spot_id)
+        if dupes.count() > 0:
+            found = dupes.first()
+            found.deleted = False
+            found.save()
+            return JsonResponse({
+                "message": "success",
+                "created": model_to_dict(found)
+            }, status=201)
+        else:
+            created = MeetupTemplate.objects.create(name=name)
+            if org_id:
+                created.org = Org.objects.get(pk=org_id)
+            if facility_id:
+                created.facility = Facility.objects.get(pk=facility_id)
+            if meetup_spot_id:
+                created.meetup_spot = MeetupSpot.objects.get(pk=meetup_spot_id)
+            if crew_template_id:
+                created.crew_template = CrewTemplate.objects.get(pk=crew_template_id)
+            created.save()
+            return JsonResponse({
+                "message": "success",
+                "created": model_to_dict(created)
+            }, status=201)
+
 
     if request.method == 'GET':
-        name = request.query_params['name'] if 'name' in request.query_params else None
-        facility_id = request.query_params['facility_id'] if 'facility_id' in request.query_params else None
-        if name is not None:
-            found = MeetupTemplate.objects.filter(name=name).first()
-            if found is not None:
-                return JsonResponse({
-                    "message": "success",
-                    "matched": model_to_dict(found, fields=[field.name for field in found._meta.fields])
-                }, status=200)
-        if facility_id is not None:
-                founds = MeetupTemplate.objects.filter(facility_id=facility_id)
-                if founds is not None:
-                    return JsonResponse({
-                        "message": "success",
-                        "matched": [model_to_dict(found, fields=[field.name for field in found._meta.fields]) for found in founds]
-                    }, status=200)
-
-        else:
-            return JsonResponse({
-                "message": "require name or facility_id for meetup_template query"
-            }, status=400)
+        name = request.GET.get('name')
+        org_id = request.GET.get('org_id')
+        facility_id = request.GET.get('facility_id')
+        meetup_spot_id = request.GET.get('meetup_spot_id')
+        founds: QuerySet = MeetupTemplate.objects.filter(deleted=False)
+        filtered = False
+        if name:
+            filtered = True
+            founds = founds.filter(name_iexact=name)
+        if org_id:
+            filtered = True
+            founds = MeetupTemplate.objects.filter(org_id=org_id)
+        if facility_id:
+            filtered = True
+            founds = MeetupTemplate.objects.filter(facility_id=facility_id)
+        if meetup_spot_id:
+            filtered = True
+            founds = MeetupTemplate.objects.filter(meetup_spot_id=meetup_spot_id)
+        if not filtered:
+            founds = MeetupTemplate.objects.all()[:10]
+        return JsonResponse({
+            "message": "success",
+            "matched": [model_to_dict(found) for found in founds]
+        }, status=200)

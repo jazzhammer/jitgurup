@@ -6,7 +6,8 @@ from api.models.crew_template import CrewTemplate
 
 class TemplateRole(models.Model):
     name = CharField(max_length=64)
-    description = TextField()
+    description = TextField(null=True, blank=True)
+    max_count = IntegerField(default=0)
     crew_template = models.ForeignKey(CrewTemplate, on_delete=models.DO_NOTHING)
     deleted = BooleanField(default=False)
 

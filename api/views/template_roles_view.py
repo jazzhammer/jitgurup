@@ -44,6 +44,7 @@ def template_roles(request, *args, **kwargs):
     if request.method == 'PUT':
         id: int = request.data.get('id')
         name: str = request.data.get('name')
+        max_count: int = request.data.get('max_count')
         description: str = request.data.get('description')
         crew_template_id: int = request.data.get('crew_template_id')
         try:
@@ -79,10 +80,13 @@ def template_roles(request, *args, **kwargs):
                 return JsonResponse({
                     "error": f"require non blank description if provided",
                 }, status=400, safe=False)
+        if max_count is not None:
+            found.max_count = max_count
         found.name = name
         found.description = description
         found.crew_template = crew_template
         found.deleted = False
+        found.save()
         return JsonResponse({
             "message": "success",
             "updated": model_to_dict(found)
@@ -91,6 +95,7 @@ def template_roles(request, *args, **kwargs):
     if request.method == 'POST':
         name: str = request.data.get('name')
         description: str = request.data.get('description')
+        max_count: int = request.data.get('max_count')
         crew_template_id: str = request.data.get('crew_template_id')
         dupes: QuerySet = TemplateRole.objects.all()
         if name:
@@ -127,7 +132,14 @@ def template_roles(request, *args, **kwargs):
                         "message": "success",
                         "created": model_to_dict(dupe)
                     }, status=201, safe=False)
-        created = TemplateRole.objects.create(name=name, crew_template=crew_template, description=description)
+        created = TemplateRole.objects.create(
+            name=name,
+            crew_template=crew_template,
+            description=description
+        )
+        if max_count is not None:
+            created.max_count = max_count
+            created.save()
         return JsonResponse({
             "message": "success",
             "created": model_to_dict(created)

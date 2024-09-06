@@ -100,8 +100,14 @@ def crew_templates(request: HttpRequest, *args, **kwargs):
                 else:
                     return JsonResponse([], status=200, safe=False)
             else:
-                return JsonResponse({"message": f"error retrieving crew_template for {name=}"}, status=400, safe=False)
+                founds = CrewTemplate.objects.filter(deleted=False)[:10]
+                return JsonResponse({
+                    "message": "success",
+                    "matched": [model_to_dict(instance) for instance in founds]
+                }, status=200, safe=False)
         else:
+            founds = CrewTemplate.objects.filter(deleted=False)[:10]
             return JsonResponse({
-                "message": "require name or facility_id for crew_template query"
-            }, status=400)
+                "message": "success",
+                "matched": [model_to_dict(instance) for instance in founds]
+            }, status=200, safe=False)
