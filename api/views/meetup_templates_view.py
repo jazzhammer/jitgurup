@@ -6,9 +6,13 @@ from rest_framework.decorators import api_view
 
 from api.models.crew_template import CrewTemplate
 from api.models.facility import Facility
+from api.models.focus import Focus
 from api.models.meetup_spot import MeetupSpot
 from api.models.meetup_template import MeetupTemplate
 from api.models.org import Org
+from api.models.subject import Subject
+from api.models.topic import Topic
+
 
 @api_view(['GET'])
 def meetup_template(request, meetup_template_id):
@@ -61,6 +65,9 @@ def meetup_templates(request, *args, **kwargs):
         facility_id: int = request.data.get('facility_id')
         meetup_spot_id: int = request.data.get('meetup_spot_id')
         crew_template_id: int = request.data.get('crew_template_id')
+        focus_id: int = request.data.get('focus_id')
+        subject_id: int = request.data.get('subject_id')
+        topic_id: int = request.data.get('topic_id')
 
         dupes: QuerySet = MeetupTemplate.objects.all().exclude(id=id)
         if name and len(name.strip()) > 0:
@@ -77,9 +84,21 @@ def meetup_templates(request, *args, **kwargs):
             dupes = dupes.filter(meetup_spot_id=meetup_spot_id)
         if crew_template_id:
             dupes = dupes.filter(crew_template_id=crew_template_id)
+        if focus_id:
+            dupes = dupes.filter(focus_id=focus_id)
+        if subject_id:
+            dupes = dupes.filter(subject_id=subject_id)
+        if topic_id:
+            dupes = dupes.filter(topic_id=topic_id)
         if dupes.count() > 0:
             found = dupes.first()
             found.deleted = False
+            try:
+                focus = Focus.objects.get(pk=focus_id)
+            except:
+                pass
+            if focus:
+                found.focus = focus
             found.save()
             return JsonResponse({
                 "message": "success",
@@ -95,6 +114,12 @@ def meetup_templates(request, *args, **kwargs):
                 updated.meetup_spot = MeetupSpot.objects.get(pk=meetup_spot_id)
             if crew_template_id:
                 updated.crew_template = CrewTemplate.objects.get(pk=crew_template_id)
+            if focus_id:
+                updated.focus = CrewTemplate.objects.get(pk=focus_id)
+            if subject_id:
+                updated.subject = CrewTemplate.objects.get(pk=subject_id)
+            if topic_id:
+                updated.topic = CrewTemplate.objects.get(pk=topic_id)
             if name:
                 updated.name = name
             updated.save()
@@ -109,6 +134,9 @@ def meetup_templates(request, *args, **kwargs):
         facility_id: int = request.data.get('facility_id')
         meetup_spot_id: int = request.data.get('meetup_spot_id')
         crew_template_id: int = request.data.get('crew_template_id')
+        focus_id: int = request.data.get('focus_id')
+        subject_id: int = request.data.get('subject_id')
+        topic_id: int = request.data.get('topic_id')
 
         dupes: QuerySet = MeetupTemplate.objects.filter(deleted=False)
         if name and len(name.strip()) > 0:
@@ -125,6 +153,22 @@ def meetup_templates(request, *args, **kwargs):
             dupes = dupes.filter(meetup_spot_id=meetup_spot_id)
         if dupes.count() > 0:
             found = dupes.first()
+        try:
+            focus = Focus.objects.get(pk=focus_id)
+        except:
+            pass
+        try:
+            subject = Subject.objects.get(pk=subject_id)
+        except:
+            pass
+        try:
+            topic = Topic.objects.get(pk=topic_id)
+        except:
+            pass
+        if focus:
+            found.focus = focus
+            found.subject = subject
+            found.topic = topic
             found.deleted = False
             found.save()
             return JsonResponse({
@@ -141,6 +185,12 @@ def meetup_templates(request, *args, **kwargs):
                 created.meetup_spot = MeetupSpot.objects.get(pk=meetup_spot_id)
             if crew_template_id:
                 created.crew_template = CrewTemplate.objects.get(pk=crew_template_id)
+            if focus_id:
+                created.focus = Focus.objects.get(pk=focus_id)
+            if subject_id:
+                created.subject = Subject.objects.get(pk=subject_id)
+            if topic_id:
+                created.topic = Topic.objects.get(pk=topic_id)
             created.save()
             return JsonResponse({
                 "message": "success",
@@ -153,6 +203,9 @@ def meetup_templates(request, *args, **kwargs):
         org_id = request.GET.get('org_id')
         facility_id = request.GET.get('facility_id')
         meetup_spot_id = request.GET.get('meetup_spot_id')
+        focus_id = request.GET.get('focus_id')
+        subject_id = request.GET.get('subject_id')
+        topic_id = request.GET.get('topic_id')
         founds: QuerySet = MeetupTemplate.objects.filter(deleted=False)
         filtered = False
         if name:
@@ -167,6 +220,15 @@ def meetup_templates(request, *args, **kwargs):
         if meetup_spot_id:
             filtered = True
             founds = MeetupTemplate.objects.filter(meetup_spot_id=meetup_spot_id)
+        if focus_id:
+            filtered = True
+            founds = MeetupTemplate.objects.filter(focus_id=focus_id)
+        if subject_id:
+            filtered = True
+            founds = MeetupTemplate.objects.filter(subject_id=subject_id)
+        if topic_id:
+            filtered = True
+            founds = MeetupTemplate.objects.filter(topic_id=topic_id)
         if not filtered:
             founds = MeetupTemplate.objects.all()[:10]
         return JsonResponse({

@@ -3,8 +3,11 @@ from django.db.models import DO_NOTHING
 
 from api.models.crew_template import CrewTemplate
 from api.models.facility import Facility
+from api.models.focus import Focus
 from api.models.meetup_spot import MeetupSpot
 from api.models.org import Org
+from api.models.subject import Subject
+from api.models.topic import Topic
 
 
 class MeetupTemplate(models.Model):
@@ -14,11 +17,16 @@ class MeetupTemplate(models.Model):
     facility = models.ForeignKey(Facility, null=True, on_delete=DO_NOTHING)
     meetup_spot= models.ForeignKey(MeetupSpot, null=True, on_delete=DO_NOTHING)
     crew_template = models.ForeignKey(CrewTemplate, null=True, on_delete=DO_NOTHING)
-
+    focus = models.ForeignKey(Focus, null=True, on_delete=DO_NOTHING)
+    subject = models.ForeignKey(Subject, null=True, on_delete=DO_NOTHING)
+    topic = models.ForeignKey(Topic, null=True, on_delete=DO_NOTHING)
     class Meta:
         indexes = [
             models.Index(fields=['name']),
             models.Index(fields=['crew_template_id']),
+            models.Index(fields=['focus_id']),
+            models.Index(fields=['subject_id']),
+            models.Index(fields=['topic_id']),
             models.Index(fields=['deleted'])
         ]
 
