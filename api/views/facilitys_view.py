@@ -149,32 +149,18 @@ def facilitys(request, *args, **kwargs):
                 }, status=404, safe=False)
         name = request.GET.get('name')
         org_id = request.GET.get('org_id')
-        if name:
-            found = Facility.objects.filter(name=name).first()
-            if found:
-                return JsonResponse({
-                    "message": "success",
-                    "matched": [model_to_dict(found)]
-                }, status=200, safe=False)
-            else:
-                return JsonResponse({
-                    "message": "success",
-                    "matched": []
-                }, status=200, safe=False)
+        founds = Facility.objects.all();
+        filtered = False
+        if name is not None:
+            if len(name.strip()) > 0:
+                filtered = True
+                founds = Facility.objects.filter(name__icontains=name)
         if org_id:
-                founds = Facility.objects.filter(org_id=org_id)
-                if founds:
-                    return JsonResponse({
-                        "message": "success",
-                        "matched": [model_to_dict(instance) for instance in founds]
-                    }, status=200)
-                else:
-                    return JsonResponse({
-                        "message": "success",
-                        "matched": []
-                    }, status=400, safe=False)
-
-        else:
-            return JsonResponse({
-                "message": "require name or org_id for facility query"
-            }, status=400, safe=False)
+            filtered = True
+            founds = founds.filter(org_id=org_id)
+        if not filtered:
+            founds = Facility.objects.all()[:10]
+        return JsonResponse({
+            "message": "success",
+            "matched": [model_to_dict(instance) for instance in founds]
+        }, status=200)
