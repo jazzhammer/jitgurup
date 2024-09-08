@@ -84,7 +84,10 @@ def crew_templates(request: HttpRequest, *args, **kwargs):
                 id = int(id)
                 found = CrewTemplate.objects.get(pk=id, deleted=False)
                 if found:
-                    return JsonResponse(model_to_dict(found), status=200, safe=False)
+                    return JsonResponse({
+                        'message': 'success',
+                        'matched': [model_to_dict(found)]
+                    }, status=200, safe=False)
                 else:
                     return JsonResponse({"message": f"not found for {id=}"}, status=404, safe=False)
             except Exception as e:
