@@ -173,6 +173,19 @@ def meetup_spots(request, *args, **kwargs):
 
 
     if request.method == 'GET':
+        id = request.GET.get('id')
+        if id:
+            try:
+                found = MeetupSpot.objects.get(pk=id)
+                return JsonResponse({
+                    'message': 'success',
+                    'matched': [model_to_dict(found)]
+                },
+                status=200, safe=False)
+            except:
+                return JsonResponse({
+                    'error:': f'no meetup_spot found for {id=}'
+                }, status=404, safe=False)
         name = request.query_params['name'] if 'name' in request.query_params else None
         facility_id = request.query_params['facility_id'] if 'facility_id' in request.query_params else None
         if name is not None:
