@@ -134,6 +134,19 @@ def facilitys(request, *args, **kwargs):
         }, status=201, safe=False)
 
     if request.method == 'GET':
+        id = request.GET.get('id')
+        if id:
+            try:
+                found = Facility.objects.get(pk=id)
+                return JsonResponse({
+                    'message': 'success',
+                    'matched': [model_to_dict(found)]
+                },
+                status=200, safe=False)
+            except:
+                return JsonResponse({
+                    'error:': f'no facility found for {id=}'
+                }, status=404, safe=False)
         name = request.GET.get('name')
         org_id = request.GET.get('org_id')
         if name:

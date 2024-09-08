@@ -7,7 +7,6 @@ from api.models.focus import Focus
 from api.models.meetup_spot import MeetupSpot
 from api.models.org import Org
 from api.models.subject import Subject
-from api.models.topic import Topic
 
 
 class MeetupTemplate(models.Model):
