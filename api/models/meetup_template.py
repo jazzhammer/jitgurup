@@ -13,6 +13,9 @@ from api.models.topic import Topic
 class MeetupTemplate(models.Model):
     name = models.CharField(max_length=128)
     deleted = models.BooleanField(default=False)
+    # the same crew needs to meetup multiple times
+    # each time, the work in progress is advanced until complete
+    work_in_progress = models.BooleanField(default=False)
     org = models.ForeignKey(Org, null=True, on_delete=DO_NOTHING)
     facility = models.ForeignKey(Facility, null=True, on_delete=DO_NOTHING)
     meetup_spot= models.ForeignKey(MeetupSpot, null=True, on_delete=DO_NOTHING)
@@ -27,7 +30,8 @@ class MeetupTemplate(models.Model):
             models.Index(fields=['focus_id']),
             models.Index(fields=['subject_id']),
             models.Index(fields=['topic_id']),
-            models.Index(fields=['deleted'])
+            models.Index(fields=['deleted']),
+            models.Index(fields=['work_in_progress'])
         ]
 
     def save(self, *args, **kwargs):

@@ -3,7 +3,7 @@ from django.urls import path
 from .views import user_view, user_preferences_view, orgs_view, security_permissions_view, facilitys_view, \
     meetup_spots_view, spot_types_view, user_persons_view, user_meetup_spots_view, persons_view, org_persons_view, \
     meetup_templates_view, tools_view, focuss_view, subjects_view, topics_view, prereq_set_view, prereq_detail_view, \
-    roles_view, crew_templates_view, template_roles_view, crews_view
+    roles_view, crew_templates_view, template_roles_view, crews_view, signups_view
 
 urlpatterns = [
     path('crews', crews_view.crews),
@@ -23,6 +23,7 @@ urlpatterns = [
     path('prereq_details', prereq_detail_view.prereq_details),
     path('prereq_sets', prereq_set_view.prereq_sets),
     path('roles', roles_view.roles),
+    path('signups', signups_view.signups),
     path('spot_types', spot_types_view.spot_types),
     path('spot_type/<int:spot_type_id>', spot_types_view.spot_type),
     path('subjects', subjects_view.subjects),

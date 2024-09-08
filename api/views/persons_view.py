@@ -60,22 +60,32 @@ def persons(request: HttpRequest):
                 "error": f"unable to update person for {id=}"
             }, status=400, safe=False)
     if request.method == 'POST':
-        new_person = JSONParser().parse(request)
-        serializer = CreatePersonSerializer(data=new_person)
-        if serializer.is_valid():
-            created = Person.objects.create(**serializer.validated_data)
-            user_id = request.data.get('user_id')
-            if user_id and len(user_id.strip()) > 0:
-                created.user_id = user_id
-                created.user.save()
-            return JsonResponse({
-                "message": "success",
-                "created": model_to_dict(created)
-            }, status=201)
-        else:
-            return JsonResponse({
-                "message": "failure: minimum object field requirements not met"
-            }, status=400)
+        last_name: str = request.data.get('last_name')
+        first_name: str = request.data.get('first_name')
+
+        if last_name:
+            if len(last_name.strip()) == 0:
+                return JsonResponse({
+                    "error": f"require last_name for person, found {last_name=}"
+                }, status=400, safe=False)
+
+        if first_name:
+            if len(first_name.strip()) == 0:
+                return JsonResponse({
+                    "error": f"require first_name for person, found {first_name=}"
+                }, status=400, safe=False)
+
+
+        created = Person.objects.create(last_name=last_name, first_name=first_name)
+        user_id = request.data.get('user_id')
+        if user_id and len(user_id.strip()) > 0:
+            created.user_id = user_id
+            created.user.save()
+        return JsonResponse({
+            "message": "success",
+            "created": model_to_dict(created)
+        }, status=201)
+
 
     if request.method == 'GET':
         first_name: str = request.GET.get('first_name')
@@ -101,4 +111,5 @@ def persons(request: HttpRequest):
         if filtered:
             return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
         else:
-            return JsonResponse([], status=200, safe=False)
+            founds = Person.objects.all().order_by('last_name', 'first_name')[:10]
+            return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)

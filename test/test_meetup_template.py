@@ -24,11 +24,13 @@ def update_default_meetup_template(updatable):
     org = create_default_org_for_name_description('another org', 'another org description')
     facility = create_default_facility_for_name_description('another facility', 'another facility description')
     meetup_spot = create_default_meetup_spot_for_name_description('another meetup_spot', 'another meetup-spot description')
+    next_work_in_progress = not updatable['work_in_progress']
     updatable['name'] = TEST_MEETUP_TEMPLATE_NEXT_NAME
     updatable['crew_template_id'] = crew_template.get('id')
     updatable['org_id'] = org.get('id')
     updatable['facility_id'] = facility.get('id')
     updatable['meetup_spot_id'] = meetup_spot.get('id')
+    updatable['work_in_progress'] = next_work_in_progress
     response = requests.put(url_test, data={**updatable})
     assert response.status_code < 300
     detail = json.loads(response.content.decode('utf-8'))
@@ -39,6 +41,7 @@ def update_default_meetup_template(updatable):
     assert updated.get('org') == org.get('id')
     assert updated.get('facility') == facility.get('id')
     assert updated.get('meetup_spot') == meetup_spot.get('id')
+    assert updated.get('work_in_progress') == next_work_in_progress
     assert updated.get('deleted') == False
 
 def create_default_meetup_template():
@@ -56,6 +59,7 @@ def create_default_meetup_template_for_name(name: str):
         'org_id': org.get('id'),
         'facility_id': facility.get('id'),
         'meetup_spot_id': meetup_spot.get('id'),
+        'work_in_progress': False
     })
     assert response.status_code < 300
     details = json.loads(response.content.decode('utf-8'))
@@ -67,6 +71,7 @@ def create_default_meetup_template_for_name(name: str):
         assert updated.get('org') == org.get('id')
         assert updated.get('facility') == facility.get('id')
         assert updated.get('meetup_spot') == meetup_spot.get('id')
+        assert updated.get('work_in_progress') == False
         assert not updated.get('deleted')
         return updated
     if created:
@@ -75,6 +80,7 @@ def create_default_meetup_template_for_name(name: str):
         assert created.get('org') == org.get('id')
         assert created.get('facility') == facility.get('id')
         assert created.get('meetup_spot') == meetup_spot.get('id')
+        assert created.get('work_in_progress') == False
         assert not created.get('deleted')
         return created
 

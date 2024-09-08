@@ -68,6 +68,7 @@ def meetup_templates(request, *args, **kwargs):
         focus_id: int = request.data.get('focus_id')
         subject_id: int = request.data.get('subject_id')
         topic_id: int = request.data.get('topic_id')
+        work_in_progress: bool = request.data.get('work_in_progress')
 
         dupes: QuerySet = MeetupTemplate.objects.all().exclude(id=id)
         if name and len(name.strip()) > 0:
@@ -90,20 +91,16 @@ def meetup_templates(request, *args, **kwargs):
             dupes = dupes.filter(subject_id=subject_id)
         if topic_id:
             dupes = dupes.filter(topic_id=topic_id)
+        if work_in_progress is not None:
+            dupes = dupes.filter(work_in_progress=str(work_in_progress).strip().lower() == 'true')
         if dupes.count() > 0:
             found = dupes.first()
             found.deleted = False
-            try:
-                focus = Focus.objects.get(pk=focus_id)
-            except:
-                pass
-            if focus:
-                found.focus = focus
             found.save()
             return JsonResponse({
                 "message": "success",
                 "updated": model_to_dict(found)
-            }, status=201)
+            }, status=200)
         else:
             updated = MeetupTemplate.objects.get(pk=id)
             if org_id:
@@ -120,6 +117,8 @@ def meetup_templates(request, *args, **kwargs):
                 updated.subject = CrewTemplate.objects.get(pk=subject_id)
             if topic_id:
                 updated.topic = CrewTemplate.objects.get(pk=topic_id)
+            if work_in_progress is not None:
+                updated.work_in_progress = str(work_in_progress).lower().strip() == 'true'
             if name:
                 updated.name = name
             updated.save()
@@ -130,45 +129,59 @@ def meetup_templates(request, *args, **kwargs):
 
     if request.method == 'POST':
         name = request.data.get('name')
+        if not name or len(name.strip()) == 0:
+            return JsonResponse({
+                "error": f"name required for new meetup_template, found: {name=}",
+            }, status=400)
+
         org_id: int = request.data.get('org_id')
+        try:
+            org = Org.objects.get(id=org_id)
+        except:
+            return JsonResponse({
+                "error": f"org required for new meetup_template, found: {org_id=}",
+            }, status=400)
         facility_id: int = request.data.get('facility_id')
         meetup_spot_id: int = request.data.get('meetup_spot_id')
         crew_template_id: int = request.data.get('crew_template_id')
         focus_id: int = request.data.get('focus_id')
         subject_id: int = request.data.get('subject_id')
         topic_id: int = request.data.get('topic_id')
+        work_in_progress: bool = request.data.get('work_in_progress')
 
-        dupes: QuerySet = MeetupTemplate.objects.filter(deleted=False)
+        dupes: QuerySet = MeetupTemplate.objects.filter(deleted=False, org_id=org_id)
         if name and len(name.strip()) > 0:
             dupes = dupes.filter(name__iexact=name)
         else:
             return JsonResponse({
                 "error": f"name required for new meetup_template, found: {name=}",
             }, status=404)
-        if org_id:
-            dupes = dupes.filter(org_id=org_id)
         if facility_id:
             dupes = dupes.filter(facility_id=facility_id)
         if meetup_spot_id:
             dupes = dupes.filter(meetup_spot_id=meetup_spot_id)
         if dupes.count() > 0:
             found = dupes.first()
-        try:
-            focus = Focus.objects.get(pk=focus_id)
-        except:
-            pass
-        try:
-            subject = Subject.objects.get(pk=subject_id)
-        except:
-            pass
-        try:
-            topic = Topic.objects.get(pk=topic_id)
-        except:
-            pass
-        if focus:
-            found.focus = focus
-            found.subject = subject
-            found.topic = topic
+            try:
+                focus = Focus.objects.get(pk=focus_id)
+            except:
+                pass
+            try:
+                subject = Subject.objects.get(pk=subject_id)
+            except:
+                pass
+            try:
+                topic = Topic.objects.get(pk=topic_id)
+            except:
+                pass
+            if focus:
+                found.focus = focus
+            if subject:
+                found.subject = subject
+            if topic:
+                found.topic = topic
+            if work_in_progress is not None:
+                found.work_in_progress = str(work_in_progress).lower().strip() == 'true'
             found.deleted = False
             found.save()
             return JsonResponse({
@@ -191,6 +204,8 @@ def meetup_templates(request, *args, **kwargs):
                 created.subject = Subject.objects.get(pk=subject_id)
             if topic_id:
                 created.topic = Topic.objects.get(pk=topic_id)
+            if work_in_progress is not None:
+                created.work_in_progress = str(work_in_progress).lower().strip() == 'true'
             created.save()
             return JsonResponse({
                 "message": "success",
@@ -206,6 +221,7 @@ def meetup_templates(request, *args, **kwargs):
         focus_id = request.GET.get('focus_id')
         subject_id = request.GET.get('subject_id')
         topic_id = request.GET.get('topic_id')
+        work_in_progress = request.GET.get('work_in_progress')
         founds: QuerySet = MeetupTemplate.objects.filter(deleted=False)
         filtered = False
         if name:
@@ -229,6 +245,9 @@ def meetup_templates(request, *args, **kwargs):
         if topic_id:
             filtered = True
             founds = MeetupTemplate.objects.filter(topic_id=topic_id)
+        if work_in_progress is not None:
+            filtered = True
+            founds = MeetupTemplate.objects.filter(work_in_progress=str(work_in_progress).lower().strip() == 'true')
         if not filtered:
             founds = MeetupTemplate.objects.all()[:10]
         return JsonResponse({

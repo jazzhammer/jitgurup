@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import DO_NOTHING
 
+from api.models.crew import Crew
 from api.models.facility import Facility
 from api.models.meetup_spot import MeetupSpot
 from api.models.meetup_template import MeetupTemplate
