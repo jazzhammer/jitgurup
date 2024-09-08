@@ -11,7 +11,6 @@ from api.models.meetup_spot import MeetupSpot
 from api.models.meetup_template import MeetupTemplate
 from api.models.org import Org
 from api.models.subject import Subject
-from api.models.topic import Topic
 
 
 @api_view(['GET'])
@@ -67,7 +66,6 @@ def meetup_templates(request, *args, **kwargs):
         crew_template_id: int = request.data.get('crew_template_id')
         focus_id: int = request.data.get('focus_id')
         subject_id: int = request.data.get('subject_id')
-        topic_id: int = request.data.get('topic_id')
         work_in_progress: bool = request.data.get('work_in_progress')
 
         dupes: QuerySet = MeetupTemplate.objects.all().exclude(id=id)
@@ -89,8 +87,6 @@ def meetup_templates(request, *args, **kwargs):
             dupes = dupes.filter(focus_id=focus_id)
         if subject_id:
             dupes = dupes.filter(subject_id=subject_id)
-        if topic_id:
-            dupes = dupes.filter(topic_id=topic_id)
         if work_in_progress is not None:
             dupes = dupes.filter(work_in_progress=str(work_in_progress).strip().lower() == 'true')
         if dupes.count() > 0:
@@ -115,8 +111,6 @@ def meetup_templates(request, *args, **kwargs):
                 updated.focus = CrewTemplate.objects.get(pk=focus_id)
             if subject_id:
                 updated.subject = CrewTemplate.objects.get(pk=subject_id)
-            if topic_id:
-                updated.topic = CrewTemplate.objects.get(pk=topic_id)
             if work_in_progress is not None:
                 updated.work_in_progress = str(work_in_progress).lower().strip() == 'true'
             if name:
@@ -146,7 +140,6 @@ def meetup_templates(request, *args, **kwargs):
         crew_template_id: int = request.data.get('crew_template_id')
         focus_id: int = request.data.get('focus_id')
         subject_id: int = request.data.get('subject_id')
-        topic_id: int = request.data.get('topic_id')
         work_in_progress: bool = request.data.get('work_in_progress')
 
         dupes: QuerySet = MeetupTemplate.objects.filter(deleted=False, org_id=org_id)
@@ -170,16 +163,10 @@ def meetup_templates(request, *args, **kwargs):
                 subject = Subject.objects.get(pk=subject_id)
             except:
                 pass
-            try:
-                topic = Topic.objects.get(pk=topic_id)
-            except:
-                pass
             if focus:
                 found.focus = focus
             if subject:
                 found.subject = subject
-            if topic:
-                found.topic = topic
             if work_in_progress is not None:
                 found.work_in_progress = str(work_in_progress).lower().strip() == 'true'
             found.deleted = False
@@ -202,8 +189,6 @@ def meetup_templates(request, *args, **kwargs):
                 created.focus = Focus.objects.get(pk=focus_id)
             if subject_id:
                 created.subject = Subject.objects.get(pk=subject_id)
-            if topic_id:
-                created.topic = Topic.objects.get(pk=topic_id)
             if work_in_progress is not None:
                 created.work_in_progress = str(work_in_progress).lower().strip() == 'true'
             created.save()
@@ -220,7 +205,6 @@ def meetup_templates(request, *args, **kwargs):
         meetup_spot_id = request.GET.get('meetup_spot_id')
         focus_id = request.GET.get('focus_id')
         subject_id = request.GET.get('subject_id')
-        topic_id = request.GET.get('topic_id')
         work_in_progress = request.GET.get('work_in_progress')
         founds: QuerySet = MeetupTemplate.objects.filter(deleted=False)
         filtered = False
@@ -242,14 +226,11 @@ def meetup_templates(request, *args, **kwargs):
         if subject_id:
             filtered = True
             founds = MeetupTemplate.objects.filter(subject_id=subject_id)
-        if topic_id:
-            filtered = True
-            founds = MeetupTemplate.objects.filter(topic_id=topic_id)
         if work_in_progress is not None:
             filtered = True
             founds = MeetupTemplate.objects.filter(work_in_progress=str(work_in_progress).lower().strip() == 'true')
         if not filtered:
-            founds = MeetupTemplate.objects.all()[:10]
+            founds = MeetupTemplate.objects.all().filter(deleted=False)[:10]
         return JsonResponse({
             "message": "success",
             "matched": [model_to_dict(found) for found in founds]

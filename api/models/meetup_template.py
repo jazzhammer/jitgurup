@@ -22,14 +22,12 @@ class MeetupTemplate(models.Model):
     crew_template = models.ForeignKey(CrewTemplate, null=True, on_delete=DO_NOTHING)
     focus = models.ForeignKey(Focus, null=True, on_delete=DO_NOTHING)
     subject = models.ForeignKey(Subject, null=True, on_delete=DO_NOTHING)
-    topic = models.ForeignKey(Topic, null=True, on_delete=DO_NOTHING)
     class Meta:
         indexes = [
             models.Index(fields=['name']),
             models.Index(fields=['crew_template_id']),
             models.Index(fields=['focus_id']),
             models.Index(fields=['subject_id']),
-            models.Index(fields=['topic_id']),
             models.Index(fields=['deleted']),
             models.Index(fields=['work_in_progress'])
         ]

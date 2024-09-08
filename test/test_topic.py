@@ -25,9 +25,12 @@ def update_default_topic(updatable):
     assert updated.get('deleted') == False
 
 def create_default_topic():
+    return create_default_topic_for_name(TEST_TOPIC_NAME)
+
+def create_default_topic_for_name(name: str):
     subject = create_default_subject()
     response = requests.post(url_test, data={
-        'name': TEST_TOPIC_NAME,
+        'name': name,
         'subject_id': subject.get('id')
     })
     assert response.status_code < 300
@@ -35,12 +38,12 @@ def create_default_topic():
     created = details.get('created')
     updated = details.get('updated')
     if updated:
-        assert updated.get('name') == TEST_TOPIC_NAME
-        assert updated.get('subject_id') == subject.get('id')
+        assert updated.get('name') == name
+        assert updated.get('subject') == subject.get('id')
         assert not updated.get('deleted')
         return updated
     if created:
-        assert created.get('name') == TEST_TOPIC_NAME
+        assert created.get('name') == name
         assert created.get('subject') == subject.get('id')
         assert not created.get('deleted')
         return created
