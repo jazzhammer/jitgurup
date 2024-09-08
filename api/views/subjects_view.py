@@ -84,6 +84,20 @@ def subjects(request: HttpRequest, *args, **kwargs):
             }, status=400)
 
     elif request.method == 'GET':
+        id = request.GET.get('id')
+        if id:
+            try:
+                found = Subject.objects.get(pk=id)
+                return JsonResponse({
+                    'message': 'success',
+                    'matched': [model_to_dict(found)]
+                },
+                status=200, safe=False)
+            except:
+                return JsonResponse({
+                    'error:': f'no subject found for {id=}'
+                }, status=404, safe=False)
+
         name = request.GET.get('name')
         if name:
             founds = Subject.objects.filter(name__icontains=name, deleted=False)
