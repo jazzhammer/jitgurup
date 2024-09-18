@@ -20,13 +20,15 @@ class MeetupTemplate(models.Model):
     meetup_spot= models.ForeignKey(MeetupSpot, null=True, on_delete=DO_NOTHING)
     crew_template = models.ForeignKey(CrewTemplate, null=True, on_delete=DO_NOTHING)
     subject = models.ForeignKey(Subject, null=True, on_delete=DO_NOTHING)
+    max_minutes = models.IntegerField(default=15)
     class Meta:
         indexes = [
             models.Index(fields=['name']),
             models.Index(fields=['crew_template_id']),
             models.Index(fields=['subject_id']),
             models.Index(fields=['deleted']),
-            models.Index(fields=['work_in_progress'])
+            models.Index(fields=['work_in_progress']),
+            models.Index(fields=['max_minutes']),
         ]
 
     def save(self, *args, **kwargs):

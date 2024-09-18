@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 
-from api.models import MeetupRole
+from api.models.meetup_role import MeetupRole
 from api.serializers.meetup_role_serializer import MeetupRoleSerializer
 
 

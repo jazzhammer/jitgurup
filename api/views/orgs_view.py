@@ -133,21 +133,24 @@ def orgs(request, *args, **kwargs):
             }, status=400)
 
     elif request.method == 'GET':
-        name = request.query_params['name']
-        if name is not None:
-            found = Org.objects.filter(name=name).first()
-            if found is not None:
-                return JsonResponse({
-                    "matched": model_to_dict(found, fields=[field.name for field in found._meta.fields])
-                }, status=200)
-            else:
-                return JsonResponse({
-                    "message": f"no org of name {name} found"
-                }, status=404)
-        else:
-            return JsonResponse({
-                "message": f"require name to search for an Org"
-            }, status=400)
+        name = request.GET.get('name')
+        description = request.GET.get('description')
+        filtered = False
+        founds = Org.objects.filter(deleted=False)
+        if name:
+            if len(name.strip()) > 0:
+                filtered = True
+                founds = founds.filter(name__icontains=name)
+        if description:
+            if len(description.strip()) > 0:
+                filtered = True
+                founds = founds.filter(description__icontains=description)
+        if not filtered:
+            founds = Org.objects.all()[:10]
+        return JsonResponse({
+            "message": f"success",
+            "matched": [model_to_dict(instance) for instance in founds]
+        }, status=200)
 
 
 @api_view(["GET", "POST"])

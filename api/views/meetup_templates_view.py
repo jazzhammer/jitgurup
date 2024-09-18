@@ -65,6 +65,7 @@ def meetup_templates(request, *args, **kwargs):
         crew_template_id: int = request.data.get('crew_template_id')
         subject_id: int = request.data.get('subject_id')
         work_in_progress: bool = request.data.get('work_in_progress')
+        max_minutes: int = request.data.get('max_minutes')
 
         dupes: QuerySet = MeetupTemplate.objects.all().exclude(id=id)
         if name and len(name.strip()) > 0:
@@ -87,6 +88,8 @@ def meetup_templates(request, *args, **kwargs):
             dupes = dupes.filter(work_in_progress=str(work_in_progress).strip().lower() == 'true')
         if dupes.count() > 0:
             found = dupes.first()
+            if max_minutes:
+                found.max_minutes = max_minutes
             found.deleted = False
             found.save()
             return JsonResponse({
@@ -109,6 +112,8 @@ def meetup_templates(request, *args, **kwargs):
                 updated.work_in_progress = str(work_in_progress).lower().strip() == 'true'
             if name:
                 updated.name = name
+            if max_minutes:
+                updated.max_minutes = max_minutes
             updated.save()
             return JsonResponse({
                 "message": "success",
@@ -134,7 +139,7 @@ def meetup_templates(request, *args, **kwargs):
         crew_template_id: int = request.data.get('crew_template_id')
         subject_id: int = request.data.get('subject_id')
         work_in_progress: bool = request.data.get('work_in_progress')
-
+        max_minutes: int = request.get('max_minutes')
         dupes: QuerySet = MeetupTemplate.objects.filter(deleted=False, org_id=org_id)
         if name and len(name.strip()) > 0:
             dupes = dupes.filter(name__iexact=name)
@@ -156,7 +161,10 @@ def meetup_templates(request, *args, **kwargs):
                 found.subject = subject
             if work_in_progress is not None:
                 found.work_in_progress = str(work_in_progress).lower().strip() == 'true'
+            if max_minutes:
+                found.max_minutes = int(max_minutes)
             found.deleted = False
+
             found.save()
             return JsonResponse({
                 "message": "success",
@@ -176,6 +184,8 @@ def meetup_templates(request, *args, **kwargs):
                 created.subject = Subject.objects.get(pk=subject_id)
             if work_in_progress is not None:
                 created.work_in_progress = str(work_in_progress).lower().strip() == 'true'
+            if max_minutes:
+                created.max_minutes = max_minutes
             created.save()
             return JsonResponse({
                 "message": "success",
@@ -194,7 +204,7 @@ def meetup_templates(request, *args, **kwargs):
         filtered = False
         if name:
             filtered = True
-            founds = founds.filter(name_iexact=name)
+            founds = founds.filter(name__iexact=name)
         if org_id:
             filtered = True
             founds = MeetupTemplate.objects.filter(org_id=org_id)
