@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from api.models.org import Org
 from api.models.person import Person
 from api.models.user_org import UserOrg
+from api.models.user_session import UserSession
 from api.serializers.user_serializers import CreatePersonSerializer, CreateUserSerializer
 from django.forms.models import model_to_dict
 from rest_framework.response import Response
@@ -15,7 +16,7 @@ from django.contrib.auth import authenticate
 import psycopg2
 from jitgurup.settings import DATABASES
 
-
+from django.contrib.auth import authenticate
 @api_view(['GET'])
 def user_user_groups(request):
     user = User.objects.get(id=int(request.query_params['user_id']))
@@ -106,8 +107,28 @@ def reset_tests_security(request, *args, **kwargs):
         }, status=500)
 
 
-@api_view(["POST", "GET"])
+@api_view(["POST", "GET", "DELETE"])
 def users(request, *args, **kwargs):
+    if request.method == 'DELETE':
+        id: str = request.GET.get('id')
+        erase = request.GET.get('erase')
+        try:
+            found = User.objects.get(pk=id)
+        except Exception as get_e:
+            #   already erased
+            return JsonResponse({'message': f'user not found for {id=}'}, status=404, safe=False)
+
+        if found:
+            if erase:
+                found.delete()
+                return JsonResponse(model_to_dict(found), status=200, safe=False)
+            else:
+                found.deleted = True
+                found.save()
+                return JsonResponse(model_to_dict(found), status=200, safe=False)
+        else:
+            return JsonResponse({'message': f"user not found for {id=}"}, status=200, safe=False)
+
     if request.method == 'GET':
         id: str = request.GET.get('id')
         if id:
@@ -160,93 +181,59 @@ def users(request, *args, **kwargs):
             except Exception as e:
                 return JsonResponse({"error": f"error retrieving user for {last_name=}"}, status=400, safe=False)
         if filtered:
-            return JsonResponse({"message": "success", "data": [model_to_dict(instance) for instance in founds]}, status=200, safe=False)
+            return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
         else:
-            return JsonResponse(    {   "message": "require at least 1 filter among email|last_name|first_name|username",
-                                        "data": [model_to_dict(instance) for instance in founds]
-                                    },
-                                    status=200, safe=False
-                                )
+            return JsonResponse(
+                [model_to_dict(instance) for instance in founds],
+                status=200,
+                safe=False
+            )
     if request.method == 'POST':
-        body = request.body
-        creds = JSONParser().parse(io.BytesIO(body))
-        # if only a username, check dupe for existing username
-        if 'username' in creds:
-            if len(creds) == 1:
-                found = User.objects.filter(username=creds['username']).first()
-                if found is None:
-                    return JsonResponse({
-                        "message": f"found no User matching username {creds['username']}"
-                    })
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        if password:
+            if username:
+                found = authenticate(username=username, password=password)
+                if found:
+                    user_session = UserSession.objects.create(user=found, session_id=UserSession.generate_uuid())
+                    found['session_id'] = user_session.session_id
+                    return JsonResponse(found, status=201, safe=False)
                 else:
-                    serialized = model_to_dict(
-                        found, fields=[field.name for field in found._meta.fields if field.name != 'password']
-                    )
                     return JsonResponse({
-                        "message": f"found one User matching username {creds['username']}",
-                        "matched": serialized
-                    }, status=200)
-            elif len(creds) == 2:
-                if 'password' in creds:
-                    # authenticate
+                        "message": f"found no User matching creds provided"
+                    }, status=404, safe=False)
+        else:
 
-                    # hashed = make_password(creds['password'])
-                    found = authenticate(username=creds['username'], password=creds['password'])
-                    if found is None:
-                        return JsonResponse({
-                            "message": "no user found matching credentials provided"
-                        })
-                    else:
-                        serialized = model_to_dict(
-                            found,
-                            fields=[field.name for field in found._meta.fields if field.name != 'password']
-                        )
+            last_name = request.POST.get("last_name")
+            if last_name:
+                last_name = last_name.strip()
+            first_name = request.POST.get("first_name")
+            if first_name:
+                first_name = first_name.strip()
 
-                        return JsonResponse({
-                            "message": "user found matching credentials provided",
-                            "authenticated": serialized
-                        })
-        # else proceed to create user row
-        #                             __
-        #  ___________   ____ _____ _/  |_  ____
-        # _/ ___\_  __ \_/ __ \\__  \\   __\/ __ \
-        # \  \___|  | \/\  ___/ / __ \|  | \  ___/
-        # \___  >__|    \___  >____  /__|  \___  >
-        #     \/            \/     \/          \/ if not dupe
-        already = User.objects.filter(username=creds['username']).first()
-        if already is None:
-            serializer = CreateUserSerializer(data=creds)
-            if serializer.is_valid():
+            username = request.POST.get("username")
+            if username:
+                founds = User.objects.filter(username=username)
+                if founds and len(founds) > 0:
+                    return JsonResponse({
+                        "message": f"user exists with username provided",
+                    }, status=400, safe=False)
+                else:
+                    # create user with default password
+                    # else proceed to create user row
+                    #                             __
+                    #  ___________   ____ _____ _/  |_  ____
+                    # _/ ___\_  __ \_/ __ \\__  \\   __\/ __ \
+                    # \  \___|  | \/\  ___/ / __ \|  | \  ___/
+                    # \___  >__|    \___  >____  /__|  \___  >
+                    #     \/            \/     \/          \/ if not dupe
+                    user = User.objects.create(last_name=last_name, first_name=first_name, username=username)
+                    # create default Person for this user
+                    person = Person.objects.create(last_name=user.last_name, first_name=user.first_name)
+                    # assign default Org(s) for this user
+                    # UserOrg.assignUserDefaults(user)
 
-                user = User.objects.create_user(
-                    serializer.validated_data['username'],
-                    serializer.validated_data['email'],
-                    serializer.validated_data['password']
-                )
-                user.last_name = serializer.validated_data['last_name']
-                user.first_name = serializer.validated_data['first_name']
-                user.save()
-
-                # create default Person for this user
-                person = Person.objects.create(last_name=user.last_name, first_name=user.first_name)
-                person.save()
-                # assign default Org(s) for this user
-                UserOrg.assignUserDefaults(user)
-
-                del serializer.validated_data['password']
-                serializer.validated_data['id'] = user.id
-                return JsonResponse({
-                    "message": "success",
-                    "created": serializer.validated_data
-                }, status=201)
-            else:
-                return JsonResponse({
-                    "message": "failure: minimum object field requirements not met"
-                }, status=400)
-        return JsonResponse({
-            "message": "failure. user previously created for that username",
-        }, status=400)
-
+                    return JsonResponse(model_to_dict(user), status=201, safe=False)
     return JsonResponse({
         "message": "failure"
     }, status=404)

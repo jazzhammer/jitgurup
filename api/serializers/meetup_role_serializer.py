@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 
-from api.models import MeetupRole
+from api.models.meetup_role import MeetupRole
 
 
 class MeetupRoleSerializer(ModelSerializer):

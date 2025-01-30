@@ -11,16 +11,16 @@ from api.serializers.user_serializers import CreatePersonSerializer
 @api_view(["POST", "GET", "PUT", "DELETE"])
 def persons(request: HttpRequest):
     if request.method == 'DELETE':
-        id: str = request.data.get('id')
+        id: str = request.GET.get('id')
+        erase = request.GET.get('erase')
         if id and len(id.strip()) > 0:
             found = Person.objects.get(pk=id)
-            found.deleted = True
-            found.save()
-            return JsonResponse({
-                "message": f"success",
-                "updated": model_to_dict(found)
-            }, status=200, safe=False)
-
+            if erase:
+                found.delete()
+            else:
+                found.deleted = True
+                found.save()
+            return JsonResponse(model_to_dict(found), status=200, safe=False)
         else:
             return JsonResponse({
                 "error": f"unable to update person for {id=}"
@@ -61,45 +61,44 @@ def persons(request: HttpRequest):
             }, status=400, safe=False)
     if request.method == 'POST':
         last_name: str = request.data.get('last_name')
-        first_name: str = request.data.get('first_name')
-
         if last_name:
-            if len(last_name.strip()) == 0:
-                return JsonResponse({
-                    "error": f"require last_name for person, found {last_name=}"
-                }, status=400, safe=False)
-
+            last_name = last_name.strip()
+        first_name: str = request.data.get('first_name')
         if first_name:
-            if len(first_name.strip()) == 0:
-                return JsonResponse({
-                    "error": f"require first_name for person, found {first_name=}"
-                }, status=400, safe=False)
-
-
-        created = Person.objects.create(last_name=last_name, first_name=first_name)
-        user_id = request.data.get('user_id')
-        if user_id and len(user_id.strip()) > 0:
-            created.user_id = user_id
-            created.user.save()
-        return JsonResponse({
-            "message": "success",
-            "created": model_to_dict(created)
-        }, status=201)
-
+            first_name = first_name.strip()
+        if last_name and first_name:
+            created = Person.objects.create(last_name=last_name, first_name=first_name)
+            user_id = request.data.get('user_id')
+            if user_id and len(user_id.strip()) > 0:
+                created.user_id = user_id
+                created.save()
+            return JsonResponse(model_to_dict(created), status=201)
+        else:
+            return JsonResponse({
+                "message": "require last_name and first_name to create person"
+            }, status=400, safe=False)
 
     if request.method == 'GET':
         first_name: str = request.GET.get('first_name')
         last_name: str = request.GET.get('last_name')
         name: str = request.GET.get('name')
         user_id: str = request.GET.get('user_id')
-        founds: QuerySet = Person.objects.all().filter(deleted=False)
+        id: str = request.GET.get('id')
+        if id:
+            found = Person.objects.get(pk=id)
+            if found:
+                return JsonResponse([found],status=200, safe=False)
+            else:
+                return JsonResponse({"message": f"no person for {id=}"}, status=404, safe=False)
+
+        founds: QuerySet = Person.objects.filter(deleted=False)
         filtered = False
         if first_name and len(first_name.strip()) > 0:
             filtered = True
-            founds = founds.filter(first_name=first_name.lower())
+            founds = founds.filter(first_name__iexact=first_name)
         if last_name and len(last_name.strip()) > 0:
             filtered = True
-            founds = founds.filter(last_name=last_name.lower())
+            founds = founds.filter(last_name__iexact=last_name)
         if name and len(name.strip()) > 0:
             filtered = True
             name = name.lower()

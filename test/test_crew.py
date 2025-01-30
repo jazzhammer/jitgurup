@@ -24,13 +24,11 @@ def update_default_crew(updatable):
     updated = detail.get('updated')
     assert updated
     assert updated.get('name') == TEST_CREW_NEXT_NAME
-    assert updated.get('crew_template') == next_crew_template.get('id')
     assert updated.get('deleted') == False
 
-def get_crew_for_name_crew_template(name: str, crew_template: int):
+def get_crew_for_name(name: str):
     response = requests.get(url_test, params={
-        'name': name,
-        'crew_template_id': crew_template
+        'name': name
     })
     return json.loads(response.content.decode('utf-8'))
 
@@ -43,19 +41,23 @@ def delete_crew(crew):
     assert deleted.get('deleted')
     return deleted
 
-def create_default_crew():
-    crew_template = create_default_crew_template()
-    return create_default_crew_for_name_crew_template_id(TEST_CREW_NAME, crew_template.get('id'))
+def create_crew_for_name(name):
+    # crew_template = create_default_crew_template()
+    return create_default_crew_for_name(name)
 
-def create_default_crew_for_name_crew_template_id(name: str, crew_template_id: int):
-    alreadys = get_crew_for_name_crew_template(TEST_CREW_NAME, crew_template_id)
+def create_default_crew():
+
+    # crew_template = create_default_crew_template()
+    return create_default_crew_for_name(TEST_CREW_NAME)
+
+def create_default_crew_for_name(name: str):
+    alreadys = get_crew_for_name(TEST_CREW_NAME)
     matches = alreadys.get('matched')
     for match in matches:
         delete_crew(match)
 
     response = requests.post(url_test, data={
-        'name': name,
-        'crew_template_id': crew_template_id
+        'name': name
     })
     assert response.status_code < 300
     details = json.loads(response.content.decode('utf-8'))
@@ -63,12 +65,10 @@ def create_default_crew_for_name_crew_template_id(name: str, crew_template_id: i
     updated = details.get('updated')
     if updated:
         assert updated.get('name') == name
-        assert updated.get('crew_template') == crew_template_id
         assert not updated.get('deleted')
         return updated
     if created:
         assert created.get('name') == name
-        assert created.get('crew_template') == crew_template_id
         assert not created.get('deleted')
         return created
 

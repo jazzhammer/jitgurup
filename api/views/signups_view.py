@@ -3,6 +3,8 @@ from django.forms import model_to_dict
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 
+from api.models.crew import Crew
+from api.models.meetup_role import MeetupRole
 from api.models.person import Person
 from api.models.signup import Signup
 from api.models.meetup import Meetup
@@ -28,6 +30,7 @@ def reset_tests(request):
 def signups(request, *args, **kwargs):
     if request.method == 'DELETE':
         id: int = request.GET.get('id')
+        erase = request.GET.get('erase')
         try:
             found = Signup.objects.get(pk=id)
         except:
@@ -36,15 +39,15 @@ def signups(request, *args, **kwargs):
             }, status=404, safe=False)
         found.deleted = True
         found.save()
-        return JsonResponse({
-            "message": "success",
-            "deleted": model_to_dict(found)
-        }, status=200, safe=False)
+        if erase:
+            found.delete()
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'PUT':
         id: int = request.data.get('id')
         person_id = request.data.get('person_id')
-        meetup_id = request.data.get('meetup_id')
+        meetup_role_id = request.data.get('meetup_role_id')
+        crew_id = request.data.get('crew_id')
         created_by_id = request.data.get('created_by_id')
 
         try:
@@ -59,50 +62,52 @@ def signups(request, *args, **kwargs):
             person_id = int(person_id)
             try:
                 person = Person.objects.get(pk=person_id)
+                found.person = person
             except:
                 return JsonResponse({
                     "error": f"require valid person_id to update signup, found {person_id=}",
                 }, status=400, safe=False)
-            dupes = dupes.filter(person_id=person_id)
 
-        if meetup_id:
-            meetup_id = int(meetup_id)
+        if meetup_role_id:
+            meetup_role_id = int(meetup_role_id)
             try:
-                meetup = Meetup.objects.get(pk=meetup_id)
+                meetup_role = MeetupRole.objects.get(pk=meetup_role_id)
+                found.meetup_role = meetup_role
             except:
                 return JsonResponse({
-                    "error": f"require valid meetup_id to update signup, found {meetup_id=}",
+                    "error": f"require valid meetup_role_id to update signup, found {meetup_role_id=}",
                 }, status=400, safe=False)
-            dupes = dupes.filter(meetup_id=meetup_id)
 
-        if dupes and dupes.count() > 0:
-            return JsonResponse({
-                "error": f"already signup for {person_id=}, {meetup_id=}",
-            }, status=400, safe=False)
+        if crew_id:
+            crew_id = int(crew_id)
+            try:
+                crew = Crew.objects.get(pk=crew_id)
+                found.crew = crew
+            except:
+                return JsonResponse({
+                    "error": f"require valid crew_id to update signup, found {crew_id=}",
+                }, status=400, safe=False)
 
-        found.person = person
-        found.meetup = meetup
         found.deleted = False
         found.save()
-        return JsonResponse({
-            "message": "success",
-            "updated": model_to_dict(found)
-        }, status=200, safe=False)
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'POST':
-        meetup_id: int = request.data.get('meetup_id')
         person_id: int = request.data.get('person_id')
+        meetup_role_id: int = request.data.get('meetup_role_id')
+        crew_id: int = request.data.get('crew_id')
         created_by_id: int = request.data.get('created_by_id')
 
         try:
-            meetup = Meetup.objects.get(pk=meetup_id)
-            person = Meetup.objects.get(pk=person_id)
-        except:
+            meetup_role = MeetupRole.objects.get(pk=meetup_role_id)
+            person = Person.objects.get(pk=person_id)
+            crew = Crew.objects.get(pk=crew_id)
+        except Exception as save_e:
             return JsonResponse({
-                "error": f"require meetup, person for signup {meetup_id=}, {person_id=}",
+                "error": f"require meetup role, person, crew for signup {crew_id=}, {person_id=}, {meetup_role_id=}: {save_e}",
             }, status=400, safe=False)
 
-        dupes = Signup.objects.filter(meetup_id=meetup_id, person_id=person_id)
+        dupes = Signup.objects.filter(crew_id=crew_id, meetup_role_id=meetup_role_id, person_id=person_id)
 
         if dupes and dupes.count() > 0:
             for dupe in dupes:
@@ -116,20 +121,18 @@ def signups(request, *args, **kwargs):
                     }, status=201, safe=False)
 
         created = Signup.objects.create(
-            meetup_id=meetup_id,
-            person_id=person_id,
+            person=person,
+            meetup_role=meetup_role,
+            crew=crew,
             created_by_id=created_by_id
         )
-        return JsonResponse({
-            "message": "success",
-            "created": model_to_dict(created)
-        }, status=201, safe=False)
+        return JsonResponse(model_to_dict(created), status=201, safe=False)
 
 
     if request.method == 'GET':
-        person_id = request.params.get('person_id')
-        meetup_id = request.params.get('meetup_id')
-        created_by_id = request.params.get('created_by_id')
+        person_id = request.GET.get('person_id')
+        meetup_id = request.GET.get('meetup_id')
+        created_by_id = request.GET.get('created_by_id')
 
         founds = Signup.objects.all()
         filtered = False
@@ -146,7 +149,4 @@ def signups(request, *args, **kwargs):
         if not filtered:
             founds = Signup.objects.all()[:10]
 
-        return JsonResponse({
-            "message": "success",
-            "matched": [model_to_dict(instance) for instance in founds]
-        }, status=200)
+        return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)

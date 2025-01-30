@@ -139,7 +139,7 @@ def meetup_templates(request, *args, **kwargs):
         crew_template_id: int = request.data.get('crew_template_id')
         subject_id: int = request.data.get('subject_id')
         work_in_progress: bool = request.data.get('work_in_progress')
-        max_minutes: int = request.get('max_minutes')
+        max_minutes: int = request.data.get('max_minutes')
         dupes: QuerySet = MeetupTemplate.objects.filter(deleted=False, org_id=org_id)
         if name and len(name.strip()) > 0:
             dupes = dupes.filter(name__iexact=name)
@@ -191,7 +191,6 @@ def meetup_templates(request, *args, **kwargs):
                 "message": "success",
                 "created": model_to_dict(created)
             }, status=201)
-
 
     if request.method == 'GET':
         name = request.GET.get('name')

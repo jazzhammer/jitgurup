@@ -61,20 +61,11 @@ def crews(request, *args, **kwargs):
                 }, status=400, safe=False)
             else:
                 dupes = dupes.filter(name=name)
-        if crew_template_id:
-            try:
-                crew_template = CrewTemplate.objects.get(pk=crew_template_id)
-            except:
-                return JsonResponse({
-                    "error": f"require valid crew_template_id to update crew_template_id, found {crew_template_id=}",
-                }, status=400, safe=False)
-            dupes = dupes.filter(crew_template_id=crew_template_id)
         if dupes and dupes.count() > 0:
             return JsonResponse({
                 "error": f"already crew {name=} for {crew_template_id=}",
             }, status=400, safe=False)
         found.name = name
-        found.crew_template = crew_template
         found.deleted = False
         return JsonResponse({
             "message": "success",
@@ -83,44 +74,14 @@ def crews(request, *args, **kwargs):
 
     if request.method == 'POST':
         name: str = request.data.get('name')
-        crew_template_id: int = request.data.get('crew_template_id')
-        dupes: QuerySet = Crew.objects.all()
         if name:
-            if len(name.strip()) <= 0:
-                return JsonResponse({
-                    "error": f"require name",
-                }, status=400, safe=False)
-            else:
-                dupes = dupes.filter(name__iexact=name.strip())
-        else:
+            name = name.strip()
+        if not name:
             return JsonResponse({
-                "error": f"crew requires name, found {name=}",
+                "error": f"require name",
             }, status=400, safe=False)
 
-        if crew_template_id:
-            try:
-                crew_template = CrewTemplate.objects.get(pk=crew_template_id)
-            except:
-                return JsonResponse({
-                    "error": f"require valid crew_template_id to update crew_template_id, found {crew_template_id=}",
-                }, status=400, safe=False)
-            dupes = dupes.filter(crew_template_id=crew_template_id)
-        else:
-            return JsonResponse({
-                "error": f"crew requires name, found {name=}",
-            }, status=400, safe=False)
-
-        if dupes and dupes.count() > 0:
-            for dupe in dupes:
-                if dupe.deleted:
-                    dupe.deleted = False
-                    dupe.save()
-                    return JsonResponse({
-                        "message": "success",
-                        "created": model_to_dict(dupe)
-                    }, status=201, safe=False)
-
-        created = Crew.objects.create(name=name, crew_template=crew_template)
+        created = Crew.objects.create(name=name)
         return JsonResponse({
             "message": "success",
             "created": model_to_dict(created)

@@ -57,7 +57,8 @@ def crew_templates(request: HttpRequest, *args, **kwargs):
     if request.method == 'POST':
         name = request.data.get('name')
         if name:
-            if len(name.strip()) > 0:
+            name = name.strip()
+            if len(name) > 0:
                 already = CrewTemplate.objects.filter(name=name).first()
                 if not already:
                     created = CrewTemplate.objects.create(name=name)

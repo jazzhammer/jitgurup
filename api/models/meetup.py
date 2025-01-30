@@ -12,9 +12,15 @@ class Meetup(models.Model):
     start_at = models.DateTimeField()
     # in minutes
     duration = models.IntegerField()
-    meetup_template = models.ForeignKey(MeetupTemplate, on_delete=DO_NOTHING)
+
+    # at least copied from the meetup template
+    # likely modified by the guru hosting the meetup
     name = models.CharField(max_length=64)
 
+    # for larger organizations and more complex learning environments,
+    # these fields will likely be filled.
+    # by default, they should be optional
+    meetup_template = models.ForeignKey(MeetupTemplate, null=True, on_delete=DO_NOTHING)
     org = models.ForeignKey(Org, null=True, on_delete=DO_NOTHING)
     facility = models.ForeignKey(Facility, null=True, on_delete=DO_NOTHING)
     meetup_spot = models.ForeignKey(MeetupSpot, null=True, on_delete=DO_NOTHING)
