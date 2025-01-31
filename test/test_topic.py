@@ -18,8 +18,7 @@ def update_default_topic(updatable):
     updatable['name'] = TEST_TOPIC_NEXT_NAME
     response = requests.put(url_test, data={**updatable})
     assert response.status_code == 200
-    detail = json.loads(response.content.decode('utf-8'))
-    updated = detail.get('updated')
+    updated = json.loads(response.content.decode('utf-8'))
     assert updated
     assert updated.get('name') == TEST_TOPIC_NEXT_NAME
     assert updated.get('deleted') == False
@@ -34,17 +33,10 @@ def create_default_topic_for_name(name: str):
         'subject_id': subject.get('id')
     })
     assert response.status_code < 300
-    details = json.loads(response.content.decode('utf-8'))
-    created = details.get('created')
-    updated = details.get('updated')
-    if updated:
-        assert updated.get('name') == name
-        assert updated.get('subject') == subject.get('id')
-        assert not updated.get('deleted')
-        return updated
+    created = json.loads(response.content.decode('utf-8'))
     if created:
         assert created.get('name') == name
-        assert created.get('subject') == subject.get('id')
+        assert int(created.get('subject')) == int(subject.get('id'))
         assert not created.get('deleted')
         return created
 
@@ -54,5 +46,5 @@ def delete_default_topic(id: int):
     })
     assert response.status_code < 300
     detail = json.loads(response.content.decode('utf-8'))
-    assert detail.get('deleted').get('deleted')
+    assert detail.get('deleted')
 

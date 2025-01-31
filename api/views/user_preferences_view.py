@@ -35,17 +35,15 @@ def preferences(request: HttpRequest, *args, **kwargs):
                     if len(user_id.strip()) > 0:
                         try:
                             user_id: int = int(user_id)
-                            found.user_id = user_id
+                            user = User.objects.get(pk=user_id)
+                            found.user = user
                         except Exception as e:
                             return JsonResponse({"error": f"require valid user_id to update user_id, found {user_id=}"}, status=404, safe=False)
                     else:
                         return JsonResponse({"error": f"require non blank user_id to update user_id, found {user_id=}"}, status=404, safe=False)
 
                 found.save()
-                return JsonResponse({
-                    "message": "success",
-                    "updated": model_to_dict(found)
-                })
+                return JsonResponse(model_to_dict(found), status=200, safe=False)
             else:
                 return JsonResponse({"error": f"none found to update for {id=}"}, status=404, safe=False)
         else:
@@ -53,15 +51,16 @@ def preferences(request: HttpRequest, *args, **kwargs):
 
     if request.method == 'DELETE':
         id: str = request.GET.get("id")
+        erase = request.GET.get('erase')
         if id:
-            found = UserPreference.objects.get(pk=int(id), deleted=False)
+            found = UserPreference.objects.get(pk=int(id))
             if found:
-                found.deleted = True
-                found.save()
-                return JsonResponse({
-                    "message": "success",
-                    "deleted": model_to_dict(found)
-                })
+                if erase:
+                    found.delete()
+                else:
+                    found.deleted = True
+                    found.save()
+                return JsonResponse(model_to_dict(found), status=200, safe=False)
             else:
                 return JsonResponse({"error": f"none found to delete for {id=}"}, status=404, safe=False)
         else:
@@ -79,19 +78,13 @@ def preferences(request: HttpRequest, *args, **kwargs):
         alreadys: QuerySet = UserPreference.objects.filter(user_id=int(user_id), name=name.strip().lower())
         if alreadys is None or alreadys.count() == 0:
             created = UserPreference.objects.create(user_id=int(user_id), name=name.strip().lower(), value=value.strip().lower())
-            return JsonResponse({
-                "message": "created UserPreference",
-                "created": model_to_dict(created)
-            }, status=201, safe=False)
+            return JsonResponse(model_to_dict(created), status=201, safe=False)
         else:
             already = alreadys.first()
             already.value = value
             already.deleted = False
             already.save()
-            return JsonResponse({
-                "message": "updated UserPreference",
-                "updated": model_to_dict(already)
-            }, status=200, safe=False)
+            return JsonResponse(model_to_dict(already), status=200, safe=False)
 
     if request.method == 'GET':
         id = request.GET.get('id')
@@ -119,7 +112,4 @@ def preferences(request: HttpRequest, *args, **kwargs):
         if filtered:
             return JsonResponse({"message": "success", "data": [model_to_dict(instance) for instance in founds]}, status=200, safe=False)
         else:
-            return JsonResponse({
-                "message": f"require filter: id | name to retrieve user_preferences, found {id=}, {name=}",
-                "data": []
-            }, status=200, safe=False)
+            return JsonResponse([], status=200, safe=False)

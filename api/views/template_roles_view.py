@@ -28,18 +28,19 @@ def reset_tests(request):
 def template_roles(request, *args, **kwargs):
     if request.method == 'DELETE':
         id: int = request.GET.get('id')
+        erase = request.GET.get('erase')
         try:
             found = TemplateRole.objects.get(pk=id)
         except:
             return JsonResponse({
                 "error": f"template_role not found for update {id=}",
             }, status=404, safe=False)
-        found.deleted = True
-        found.save()
-        return JsonResponse({
-            "message": "success",
-            "deleted": model_to_dict(found)
-        }, status=200, safe=False)
+        if erase:
+            found.delete()
+        else:
+            found.deleted = True
+            found.save()
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'PUT':
         id: int = request.data.get('id')
@@ -53,8 +54,7 @@ def template_roles(request, *args, **kwargs):
             return JsonResponse({
                 "error": f"template_role not found for update {id=}",
             }, status=404, safe=False)
-        dupes: QuerySet = TemplateRole.objects.all()
-        dupes.exclude(id=id)
+        dupes: QuerySet = TemplateRole.objects.all().exclude(id=id)
         if name:
             if len(name.strip()) <= 0:
                 return JsonResponse({
@@ -87,10 +87,7 @@ def template_roles(request, *args, **kwargs):
         found.crew_template = crew_template
         found.deleted = False
         found.save()
-        return JsonResponse({
-            "message": "success",
-            "updated": model_to_dict(found)
-        }, status=200, safe=False)
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'POST':
         name: str = request.data.get('name')

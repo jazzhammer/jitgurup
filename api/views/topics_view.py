@@ -1,5 +1,3 @@
-
-
 from django.forms import model_to_dict
 from rest_framework.decorators import api_view
 
@@ -9,7 +7,7 @@ from django.http import JsonResponse, HttpRequest
 
 
 @api_view(['POST', 'GET', 'DELETE', 'PUT'])
-def topics(request: HttpRequest, *args, **kwargs):
+def topics(request: HttpRequest):
     if request.method == 'DELETE':
         id = request.GET.get('id')
         if not id:
@@ -56,10 +54,7 @@ def topics(request: HttpRequest, *args, **kwargs):
             if subject_id:
                 found.subject = Subject.objects.get(pk=subject_id)
                 found.save()
-            return JsonResponse({
-                "message": "success",
-                "updated": model_to_dict(found)
-            }, status=200)
+            return JsonResponse(model_to_dict(found), status=200)
 
     if request.method == 'POST':
         name: str = request.data.get('name')
@@ -69,17 +64,11 @@ def topics(request: HttpRequest, *args, **kwargs):
                 already = Topic.objects.filter(name__iexact=name, subject_id=subject_id).first()
                 if already is None:
                     created = Topic.objects.create(name=name.strip(), subject_id=subject_id)
-                    return JsonResponse({
-                        "message": "created Topic",
-                        "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
-                    }, status=201)
+                    return JsonResponse(model_to_dict(created, fields=[field.name for field in created._meta.fields]), status=201)
                 else:
                     already.deleted = False
                     already.save()
-                    return JsonResponse({
-                        "message": "undeleted Topic",
-                        "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
-                    }, status=200)
+                    return JsonResponse(model_to_dict(already, fields=[field.name for field in already._meta.fields]), status=200)
             else:
                 return JsonResponse({
                     "error": f"require non blank name and subject_id for new topic, found {name=} {subject_id=}"
@@ -103,9 +92,6 @@ def topics(request: HttpRequest, *args, **kwargs):
                 "matched": [model_to_dict(instance) for instance in founds]
             }, status=200)
         else:
-            return JsonResponse({
-                "message": f"no topic of name {name}, subject_id {subject_id=} found",
-                "matched": []
-            }, status=200)
+            return JsonResponse([], status=200)
 
 

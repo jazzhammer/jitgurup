@@ -20,8 +20,7 @@ def update_default_template_topic(updatable):
     updatable['meetup_template_id'] = next_meetup_template.get('id')
     response = requests.put(url_test, data={**updatable})
     assert response.status_code == 200
-    detail = json.loads(response.content.decode('utf-8'))
-    updated = detail.get('updated')
+    updated = json.loads(response.content.decode('utf-8'))
     assert updated
     assert updated.get('topic') == next_topic.get('id')
     assert updated.get('meetup_template') == next_meetup_template.get('id')
@@ -51,14 +50,7 @@ def create_default_template_topic():
         'meetup_template_id': meetup_template.get('id')
     })
     assert response.status_code < 300
-    details = json.loads(response.content.decode('utf-8'))
-    created = details.get('created')
-    updated = details.get('updated')
-    if updated:
-        assert updated.get('topic') == topic.get('id')
-        assert updated.get('meetup_template') == meetup_template.get('id')
-        assert not updated.get('deleted')
-        return updated
+    created = json.loads(response.content.decode('utf-8'))
     if created:
         assert created.get('topic') == topic.get('id')
         assert created.get('meetup_template') == meetup_template.get('id')
@@ -71,5 +63,5 @@ def delete_default_template_topic(id: int):
     })
     assert response.status_code < 300
     detail = json.loads(response.content.decode('utf-8'))
-    assert detail.get('deleted').get('deleted')
+    assert detail.get('deleted')
 

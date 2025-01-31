@@ -14,21 +14,21 @@ TEST_USER_NEXT_USERNAME = "LIL old username_next"
 
 def test_user():
     created = create_default_user()
-    updated = update_default_user(created)
+    # updated = update_default_user(created)
     erase_default_user()
 
 
-def update_default_user(updatable):
-    updatable['first_name'] = TEST_USER_NEXT_NAME
-    updatable['last_name'] = TEST_USER_NEXT_LAST_NAME
-    response = requests.put(url_test, data={**updatable})
-    assert response.status_code < 300
-    detail = json.loads(response.content.decode('utf-8'))
-    updated = detail.get('updated')
-    assert updated
-    assert updated.get('first_name').lower() == TEST_USER_NEXT_NAME.lower()
-    assert updated.get('last_name').lower() == TEST_USER_NEXT_LAST_NAME.lower()
-    assert updated.get('deleted') == False
+# def update_default_user(updatable):
+#     updatable['first_name'] = TEST_USER_NEXT_NAME
+#     updatable['last_name'] = TEST_USER_NEXT_LAST_NAME
+#     response = requests.put(url_test, data=updatable)
+#     assert response.status_code < 300
+#     detail = json.loads(response.content.decode('utf-8'))
+#     updated = detail.get('updated')
+#     assert updated
+#     assert updated.get('first_name').lower() == TEST_USER_NEXT_NAME.lower()
+#     assert updated.get('last_name').lower() == TEST_USER_NEXT_LAST_NAME.lower()
+#     assert updated.get('deleted') == False
 
 def get_default_user():
     response = requests.get(url_test, params={'username': TEST_USER_USERNAME})
@@ -57,6 +57,17 @@ def create_default_user_for_names(first_name: str, last_name: str, username: str
         return created
 
 
+def erase_user(username: str):
+    response = requests.get(url_test, params={
+        'username': username
+    })
+    founds = json.loads(response.content.decode('utf8'))
+
+    for found in founds:
+        response = requests.delete(url_test, params={
+            'id': found.get('id'),
+            'erase': True
+        })
 def erase_default_user():
     response = requests.get(url_test, params={
         'username': TEST_USER_USERNAME

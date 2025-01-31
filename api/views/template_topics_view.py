@@ -36,10 +36,7 @@ def template_topics(request, *args, **kwargs):
             }, status=404, safe=False)
         found.deleted = True
         found.save()
-        return JsonResponse({
-            "message": "success",
-            "deleted": model_to_dict(found)
-        }, status=200, safe=False)
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'PUT':
         id: int = request.data.get('id')
@@ -81,10 +78,7 @@ def template_topics(request, *args, **kwargs):
         found.meetup_template = meetup_template
         found.deleted = False
         found.save()
-        return JsonResponse({
-            "message": "success",
-            "updated": model_to_dict(found)
-        }, status=200, safe=False)
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'POST':
 
@@ -118,19 +112,13 @@ def template_topics(request, *args, **kwargs):
                 if dupe.deleted:
                     dupe.deleted = False
                     dupe.save()
-                    return JsonResponse({
-                        "message": "success",
-                        "created": model_to_dict(dupe)
-                    }, status=201, safe=False)
+                    return JsonResponse(model_to_dict(dupe), status=201, safe=False)
         created = TemplateTopic.objects.create(
             topic=topic,
             meetup_template=meetup_template
         )
 
-        return JsonResponse({
-            "message": "success",
-            "created": model_to_dict(created)
-        }, status=201, safe=False)
+        return JsonResponse(model_to_dict(created), status=201, safe=False)
 
     if request.method == 'GET':
         topic_id = request.GET.get('topic_id')
@@ -146,7 +134,4 @@ def template_topics(request, *args, **kwargs):
         if not filtered:
             founds = TemplateTopic.objects.all()[:10]
         if founds:
-            return JsonResponse({
-                "message": "success",
-                "matched": [model_to_dict(instance) for instance in founds]
-            }, status=200)
+            return JsonResponse([model_to_dict(instance) for instance in founds], status=200)
