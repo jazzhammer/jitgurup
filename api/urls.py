@@ -4,7 +4,7 @@ from .views import user_view, user_preferences_view, orgs_view, security_permiss
     meetup_spots_view, spot_types_view, user_persons_view, user_meetup_spots_view, persons_view, org_persons_view, \
     meetup_templates_view, tools_view, focuss_view, subjects_view, topics_view, prereq_set_view, prereq_detail_view, \
     roles_view, crew_templates_view, template_roles_view, crews_view, signups_view, template_topics_view, \
-    topic_resources_view, meetup_roles_view, meetup_view
+    topic_resources_view, meetup_roles_view, meetup_view, village_view
 
 urlpatterns = [
     path('crews', crews_view.crews),
@@ -52,4 +52,5 @@ urlpatterns = [
     path("seed/default_users", user_view.seed_default_users),
     path("seed/default_orgs", user_view.seed_default_orgs),
     path("seed/default_user_orgs", user_view.seed_default_user_orgs),
+    path("villages", village_view.villages)
 ]
