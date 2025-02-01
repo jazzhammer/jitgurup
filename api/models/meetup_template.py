@@ -17,7 +17,7 @@ class MeetupTemplate(models.Model):
     work_in_progress = models.BooleanField(default=False)
     org = models.ForeignKey(Org, null=True, on_delete=DO_NOTHING)
     facility = models.ForeignKey(Facility, null=True, on_delete=DO_NOTHING)
-    meetup_spot= models.ForeignKey(MeetupSpot, null=True, on_delete=DO_NOTHING)
+    meetup_spot = models.ForeignKey(MeetupSpot, null=True, on_delete=DO_NOTHING)
     crew_template = models.ForeignKey(CrewTemplate, null=True, on_delete=DO_NOTHING)
     subject = models.ForeignKey(Subject, null=True, on_delete=DO_NOTHING)
     max_minutes = models.IntegerField(default=15)

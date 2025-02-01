@@ -4,20 +4,23 @@ import requests
 
 from test_person import create_default_person, create_default_person_for_names, erase_default_person
 from test_user import create_default_user, erase_default_user, get_default_user
-from test_crew import create_default_crew, create_crew_for_name
-from test_meetup_role import create_default_meetup_role, create_default_meetup_role_for_name_description
+from test_crew import create_default_crew, create_crew_for_name, erase_default_crew
+from test_meetup_role import create_default_meetup_role, create_default_meetup_role_for_name_description, erase_default_meetup_role
 from test_meetup import create_default_meetup, erase_default_meetup
 url_test = 'http://localhost:8000/api/signups'
 
 
 def test_signup():
-    created = create_default_signup()
+    created, person, crew, meetup_role, created_by, meetup = create_default_signup()
 
     updated = update_default_signup(created)
     delete_default_signup(created.get('id'))
     erase_default_signup(created.get('id'))
     erase_default_user()
     erase_default_person()
+    erase_default_crew(crew.get('id'))
+    erase_default_meetup_role(meetup_role.get('id'))
+    erase_default_meetup(meetup.get('id'))
 
 def update_default_signup(updatable):
     next_meetup_role = create_default_meetup_role_for_name_description('another name', 'another description')
@@ -70,7 +73,7 @@ def create_default_signup():
         assert created.get('crew') == crew.get('id')
         assert created.get('meetup_role') == meetup_role.get('id')
         assert not created.get('deleted')
-    return created
+    return created, person, crew, meetup_role, created_by, meetup
 
 def delete_default_signup(id: int):
     response = requests.delete(url_test, params={

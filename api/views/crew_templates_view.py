@@ -33,7 +33,7 @@ def crew_templates(request: HttpRequest, *args, **kwargs):
                                             safe=False
                         )
                 found.save()
-                return JsonResponse({'message': 'updated', 'updated': model_to_dict(found)}, status=200, safe=False)
+                return JsonResponse(model_to_dict(found), status=200, safe=False)
             except:
                 return JsonResponse({"detail": f"require valid id to update crew_template, found {id=}"}, status=400, safe=False)
         else:
@@ -62,17 +62,11 @@ def crew_templates(request: HttpRequest, *args, **kwargs):
                 already = CrewTemplate.objects.filter(name=name).first()
                 if not already:
                     created = CrewTemplate.objects.create(name=name)
-                    return JsonResponse({
-                        "message": "success",
-                        "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
-                    }, status=201)
+                    return JsonResponse(model_to_dict(created, fields=[field.name for field in created._meta.fields]), status=201)
                 else:
                     already.deleted = False
                     already.save()
-                    return JsonResponse({
-                        "message": "previously created",
-                        "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
-                    }, status=200)
+                    return JsonResponse(model_to_dict(already, fields=[field.name for field in already._meta.fields]), status=200)
             else:
                 return JsonResponse({"detail": f"require non blank name for crew_template, found {name=}"}, status=400, safe=False)
         else:
@@ -85,10 +79,7 @@ def crew_templates(request: HttpRequest, *args, **kwargs):
                 id = int(id)
                 found = CrewTemplate.objects.get(pk=id, deleted=False)
                 if found:
-                    return JsonResponse({
-                        'message': 'success',
-                        'matched': [model_to_dict(found)]
-                    }, status=200, safe=False)
+                    return JsonResponse([model_to_dict(found)], status=200, safe=False)
                 else:
                     return JsonResponse({"message": f"not found for {id=}"}, status=404, safe=False)
             except Exception as e:
@@ -97,21 +88,12 @@ def crew_templates(request: HttpRequest, *args, **kwargs):
             if len(name.strip()) > 0:
                 founds = CrewTemplate.objects.filter(name__contains=name.strip(), deleted=False)
                 if founds:
-                    return JsonResponse({
-                        "message": "success",
-                        "matched": [model_to_dict(instance) for instance in founds]
-                    }, status=200, safe=False)
+                    return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
                 else:
                     return JsonResponse([], status=200, safe=False)
             else:
                 founds = CrewTemplate.objects.filter(deleted=False)[:10]
-                return JsonResponse({
-                    "message": "success",
-                    "matched": [model_to_dict(instance) for instance in founds]
-                }, status=200, safe=False)
+                return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
         else:
             founds = CrewTemplate.objects.filter(deleted=False)[:10]
-            return JsonResponse({
-                "message": "success",
-                "matched": [model_to_dict(instance) for instance in founds]
-            }, status=200, safe=False)
+            return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)

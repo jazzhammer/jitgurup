@@ -23,6 +23,7 @@ def test_meetup():
     created = create_default_meetup()
     updated = update_default_meetup(created)
     delete_default_meetup(updated.get('id'))
+    erase_default_meetup(updated.get('id'))
 
 def update_default_meetup(updatable):
 

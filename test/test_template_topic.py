@@ -12,6 +12,7 @@ def test_template_topic():
     created = create_default_template_topic()
     updated = update_default_template_topic(created)
     delete_default_template_topic(created.get('id'))
+    erase_default_template_topic(created.get('id'))
 
 def update_default_template_topic(updatable):
     next_topic = create_default_topic_for_name('another name')
@@ -56,6 +57,15 @@ def create_default_template_topic():
         assert created.get('meetup_template') == meetup_template.get('id')
         assert not created.get('deleted')
         return created
+
+def erase_default_template_topic(id: int):
+    response = requests.delete(url_test, params={
+        'id': id,
+        'erase': True
+    })
+    assert response.status_code < 300
+    detail = json.loads(response.content.decode('utf-8'))
+
 
 def delete_default_template_topic(id: int):
     response = requests.delete(url_test, params={

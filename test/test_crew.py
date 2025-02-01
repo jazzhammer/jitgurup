@@ -20,8 +20,7 @@ def update_default_crew(updatable):
     updatable['crew_template_id'] = next_crew_template.get('id')
     response = requests.put(url_test, data={**updatable})
     assert response.status_code == 200
-    detail = json.loads(response.content.decode('utf-8'))
-    updated = detail.get('updated')
+    updated = json.loads(response.content.decode('utf-8'))
     assert updated
     assert updated.get('name') == TEST_CREW_NEXT_NAME
     assert updated.get('deleted') == False
@@ -51,8 +50,7 @@ def create_default_crew():
     return create_default_crew_for_name(TEST_CREW_NAME)
 
 def create_default_crew_for_name(name: str):
-    alreadys = get_crew_for_name(TEST_CREW_NAME)
-    matches = alreadys.get('matched')
+    matches = get_crew_for_name(TEST_CREW_NAME)
     for match in matches:
         delete_crew(match)
 
@@ -60,17 +58,20 @@ def create_default_crew_for_name(name: str):
         'name': name
     })
     assert response.status_code < 300
-    details = json.loads(response.content.decode('utf-8'))
-    created = details.get('created')
-    updated = details.get('updated')
-    if updated:
-        assert updated.get('name') == name
-        assert not updated.get('deleted')
-        return updated
+    created = json.loads(response.content.decode('utf-8'))
     if created:
         assert created.get('name') == name
         assert not created.get('deleted')
         return created
+
+def erase_default_crew(id: int):
+    response = requests.delete(url_test, params={
+        'id': id,
+        'erase': True
+    })
+    assert response.status_code < 300
+    detail = json.loads(response.content.decode('utf-8'))
+
 
 def delete_default_crew(id: int):
     response = requests.delete(url_test, params={
@@ -78,5 +79,5 @@ def delete_default_crew(id: int):
     })
     assert response.status_code < 300
     detail = json.loads(response.content.decode('utf-8'))
-    assert detail.get('deleted').get('deleted')
+    assert detail.get('deleted')
 

@@ -15,8 +15,7 @@ def update_default_crew_template(updatable, next_name):
     updatable['name'] = next_name
     response = requests.put(url_test, data={**updatable})
     assert response.status_code == 200
-    detail = json.loads(response.content.decode('utf-8'))
-    updated = detail.get('updated')
+    updated = json.loads(response.content.decode('utf-8'))
     assert updated
     assert updated.get('name') == next_name
     assert updated.get('deleted') == False
@@ -29,8 +28,7 @@ def create_default_crew_template_for_name(name: str):
         'name': name
     })
     assert response.status_code < 300
-    details = json.loads(response.content.decode('utf-8'))
-    created = details.get('created')
+    created = json.loads(response.content.decode('utf-8'))
     assert created.get('name') == name
     assert not created.get('deleted')
     return created
@@ -41,5 +39,5 @@ def delete_default_crew_template(id: int):
     })
     assert response.status_code < 300
     detail = json.loads(response.content.decode('utf-8'))
-    assert detail.get('deleted').get('deleted')
+    assert detail.get('deleted')
 

@@ -29,18 +29,19 @@ def reset_tests(request):
 def crews(request, *args, **kwargs):
     if request.method == 'DELETE':
         id: int = request.GET.get('id')
+        erase = request.GET.get('erase')
         try:
             found = Crew.objects.get(pk=id)
         except:
             return JsonResponse({
                 "error": f"crew not found for update {id=}",
             }, status=404, safe=False)
-        found.deleted = True
-        found.save()
-        return JsonResponse({
-            "message": "success",
-            "deleted": model_to_dict(found)
-        }, status=200, safe=False)
+        if erase:
+            found.delete()
+        else:
+            found.deleted = True
+            found.save()
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'PUT':
         id: int = request.data.get('id')
@@ -67,10 +68,7 @@ def crews(request, *args, **kwargs):
             }, status=400, safe=False)
         found.name = name
         found.deleted = False
-        return JsonResponse({
-            "message": "success",
-            "updated": model_to_dict(found)
-        }, status=200, safe=False)
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'POST':
         name: str = request.data.get('name')
@@ -82,10 +80,7 @@ def crews(request, *args, **kwargs):
             }, status=400, safe=False)
 
         created = Crew.objects.create(name=name)
-        return JsonResponse({
-            "message": "success",
-            "created": model_to_dict(created)
-        }, status=201, safe=False)
+        return JsonResponse(model_to_dict(created), status=201, safe=False)
 
     if request.method == 'GET':
         name = request.GET.get('name')
@@ -93,27 +88,15 @@ def crews(request, *args, **kwargs):
         if name:
             found = Crew.objects.filter(name=name).first()
             if found:
-                return JsonResponse({
-                    "message": "success",
-                    "matched": [model_to_dict(found)]
-                }, status=200, safe=False)
+                return JsonResponse([model_to_dict(found)], status=200, safe=False)
             else:
-                return JsonResponse({
-                    "message": "success",
-                    "matched": []
-                }, status=200, safe=False)
+                return JsonResponse([], status=200, safe=False)
         if crew_template_id:
                 founds = Crew.objects.filter(crew_template_id=crew_template_id)
                 if founds:
-                    return JsonResponse({
-                        "message": "success",
-                        "matched": [model_to_dict(instance) for instance in founds]
-                    }, status=200)
+                    return JsonResponse([model_to_dict(instance) for instance in founds], status=200)
                 else:
-                    return JsonResponse({
-                        "message": "success",
-                        "matched": []
-                    }, status=400, safe=False)
+                    return JsonResponse([], status=400, safe=False)
 
         else:
             return JsonResponse({

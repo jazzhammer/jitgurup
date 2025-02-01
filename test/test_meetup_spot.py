@@ -18,6 +18,7 @@ def test_meetup_spot():
     created = create_default_meetup_spot()
     updated = update_default_meetup_spot(created)
     delete_default_meetup_spot(created.get('id'))
+    erase_default_meetup_spot(created.get('id'))
 
 
 
@@ -73,7 +74,16 @@ def create_default_meetup_spot_for_name_description(name: str, description: str)
         return created
 
 
+def erase_default_meetup_spot(id: int):
+    response = requests.delete(url_test, params={
+        'id': id,
+        'erase': True
+    })
+    assert response.status_code < 300
+    detail = json.loads(response.content.decode('utf-8'))
+
 def delete_default_meetup_spot(id: int):
+
     response = requests.delete(url_test, params={
         'id': id
     })

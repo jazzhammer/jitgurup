@@ -16,6 +16,7 @@ def test_meetup_role():
     created = create_default_meetup_role()
     updated = update_default_meetup_role(created)
     delete_default_meetup_role(updated.get('id'))
+    erase_default_meetup_role(updated.get('id'))
 
 def update_default_meetup_role(updatable):
 
@@ -44,6 +45,13 @@ def create_default_meetup_role_for_name_description(name: str, description: str)
     assert not created.get('deleted')
     return created
 
+
+def erase_default_meetup_role(id: int):
+    response = requests.delete(url_test, params={
+        'id': id,
+        'erase': True
+    })
+    assert response.status_code < 300
 
 def delete_default_meetup_role(id: int):
     response = requests.delete(url_test, params={
