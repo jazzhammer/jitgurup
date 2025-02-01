@@ -102,4 +102,5 @@ def get(request: HttpRequest):
     if filtered:
         return JsonResponse([model_to_dict(found) for found in founds], safe=False, status=200)
     else:
-        return JsonResponse({"mesasge": f"require id, name, or description to get Villages"}, safe=False, status=400)
+        founds = founds.order_by('name')[:5]
+        return JsonResponse([model_to_dict(found) for found in founds], safe=False, status=200)
