@@ -87,11 +87,8 @@ def topics(request: HttpRequest):
         if subject_id:
             founds = founds.filter(subject_id=subject_id, deleted=False)
         if founds:
-            return JsonResponse({
-                "message": "success",
-                "matched": [model_to_dict(instance) for instance in founds]
-            }, status=200)
+            return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
         else:
-            return JsonResponse([], status=200)
+            return JsonResponse([], status=200, safe=False)
 
 

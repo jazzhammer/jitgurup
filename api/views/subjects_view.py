@@ -24,10 +24,7 @@ def subjects(request: HttpRequest, *args, **kwargs):
             else:
                 found.deleted = True
                 found.save()
-                return JsonResponse({
-                    "message": "success",
-                    "deleted": model_to_dict(found)
-                }, status=200)
+                return JsonResponse(model_to_dict(found), status=200)
 
     if request.method == 'PUT':
         id = request.data.get('id')
@@ -51,10 +48,7 @@ def subjects(request: HttpRequest, *args, **kwargs):
                     return JsonResponse({
                         "error": f"require non blank name to update subject, found {name=}"
                     }, status=400, safe=False)
-            return JsonResponse({
-                "message": "success",
-                "updated": model_to_dict(found)
-            }, status=200)
+            return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'POST':
         name: str = request.data.get('name')
@@ -63,17 +57,11 @@ def subjects(request: HttpRequest, *args, **kwargs):
                 already = Subject.objects.filter(name__iexact=name).first()
                 if already is None:
                     created = Subject.objects.create(name=name.strip())
-                    return JsonResponse({
-                        "message": "created Subject",
-                        "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
-                    }, status=201)
+                    return JsonResponse(model_to_dict(created, fields=[field.name for field in created._meta.fields]), status=201, safe=False)
                 else:
                     already.deleted = False
                     already.save()
-                    return JsonResponse({
-                        "message": "undeleted Subject",
-                        "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
-                    }, status=200)
+                    return JsonResponse(model_to_dict(already, fields=[field.name for field in already._meta.fields]), status=200)
             else:
                 return JsonResponse({
                     "error": f"require non blank name for new subject, found {name=}"
@@ -81,18 +69,14 @@ def subjects(request: HttpRequest, *args, **kwargs):
         else:
             return JsonResponse({
                 "message": "unable to create for missing minimum fields"
-            }, status=400)
+            }, status=400, safe=False)
 
     elif request.method == 'GET':
         id = request.GET.get('id')
         if id:
             try:
                 found = Subject.objects.get(pk=id)
-                return JsonResponse({
-                    'message': 'success',
-                    'matched': [model_to_dict(found)]
-                },
-                status=200, safe=False)
+                return JsonResponse([model_to_dict(found)], status=200, safe=False)
             except:
                 return JsonResponse({
                     'error:': f'no subject found for {id=}'
@@ -102,19 +86,13 @@ def subjects(request: HttpRequest, *args, **kwargs):
         if name:
             founds = Subject.objects.filter(name__icontains=name, deleted=False)
             if founds is not None:
-                return JsonResponse({
-                    "message": "success",
-                    "matched": [model_to_dict(instance) for instance in founds]
-                }, status=200)
+                return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
             else:
                 return JsonResponse({
                     "message": f"no subject of name {name} found"
                 }, status=404)
         else:
             founds = Subject.objects.all()[:10]
-            return JsonResponse({
-                "message": "success",
-                "matched": [model_to_dict(instance) for instance in founds]
-            }, status=200)
+            return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
 
 
