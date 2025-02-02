@@ -55,18 +55,19 @@ def spot_type(request, spot_type_id):
 def spot_types(request):
     if request.method == 'DELETE':
         id: int = request.GET.get('id')
+        erase = request.GET.get('erase')
         try:
             found = SpotType.objects.get(pk=id)
         except:
             return JsonResponse({
                 "error": f"spot_type not found for update {id=}",
             }, status=404, safe=False)
-        found.deleted = True
-        found.save()
-        return JsonResponse({
-            "message": "success",
-            "deleted": model_to_dict(found)
-        }, status=200, safe=False)
+        if erase:
+            found.delete()
+        else:
+            found.deleted = True
+            found.save()
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'PUT':
         id: int = request.data.get('id')
@@ -101,10 +102,7 @@ def spot_types(request):
         found.name = name
         found.description = description
         found.deleted = False
-        return JsonResponse({
-            "message": "success",
-            "updated": model_to_dict(found)
-        }, status=200, safe=False)
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'POST':
         name: str = request.data.get('name')
@@ -133,15 +131,9 @@ def spot_types(request):
                 if dupe.deleted:
                     dupe.deleted = False
                     dupe.save()
-                    return JsonResponse({
-                        "message": "success",
-                        "created": model_to_dict(dupe)
-                    }, status=201, safe=False)
+                    return JsonResponse(model_to_dict(dupe), status=201, safe=False)
         created = SpotType.objects.create(name=name, description=description)
-        return JsonResponse({
-            "message": "success",
-            "created": model_to_dict(created)
-        }, status=201, safe=False)
+        return JsonResponse(model_to_dict(created), status=201, safe=False)
 
 
 
@@ -168,16 +160,10 @@ def user_spot_types(request, *args, **kwargs):
             serializer = SpotTypeSerializer(data=newSpotType)
             if serializer.is_valid():
                 SpotType.objects.create(**serializer.validated_data)
-                return JsonResponse({
-                    "message": "success",
-                    "created": serializer.validated_data
-                }, status=201)
+                return JsonResponse(serializer.validated_data, status=201)
             else:
                 return JsonResponse({
                     "message": "failure. unable to create SpotType"
                 }, status=400)
         else:
-            return JsonResponse({
-                "message": "failed to create. previously created SpotType",
-                "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
-            }, status=400)
+            return JsonResponse(model_to_dict(already, fields=[field.name for field in already._meta.fields]), status=400)

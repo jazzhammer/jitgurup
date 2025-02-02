@@ -25,6 +25,7 @@ def persons(request: HttpRequest):
             return JsonResponse({
                 "error": f"unable to update person for {id=}"
             }, status=400, safe=False)
+
     if request.method == 'PUT':
         last_name: str = request.data.get('last_name')
         first_name: str = request.data.get('first_name')

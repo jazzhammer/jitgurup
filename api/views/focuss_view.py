@@ -12,23 +12,25 @@ from django.http import JsonResponse, HttpRequest
 def focuss(request: HttpRequest, *args, **kwargs):
     if request.method == 'DELETE':
         id = request.GET.get('id')
+        erase = request.GET.get('erase')
         if not id:
             return JsonResponse({
                 "error": f"require id to delete focus, found {id=}"
             }, status=400, safe=False)
         else:
             found = Focus.objects.get(pk=id)
+
             if not found:
                 return JsonResponse({
                     "error": f"focus not found for {id=}"
                 }, status=404, safe=False)
             else:
-                found.deleted = True
-                found.save()
-                return JsonResponse({
-                    "message": "success",
-                    "deleted": model_to_dict(found)
-                }, status=200)
+                if erase:
+                    found.delete()
+                else:
+                    found.deleted = True
+                    found.save()
+                return JsonResponse(model_to_dict(found), status=200)
 
     if request.method == 'PUT':
         id = request.data.get('id')
@@ -52,10 +54,7 @@ def focuss(request: HttpRequest, *args, **kwargs):
                     return JsonResponse({
                         "error": f"require non blank name to update focus, found {name=}"
                     }, status=400, safe=False)
-            return JsonResponse({
-                "message": "success",
-                "updated": model_to_dict(found)
-            }, status=200)
+            return JsonResponse(model_to_dict(found), status=200)
 
     if request.method == 'POST':
         name: str = request.data.get('name')
@@ -64,17 +63,11 @@ def focuss(request: HttpRequest, *args, **kwargs):
                 already = Focus.objects.filter(name__iexact=name).first()
                 if already is None:
                     created = Focus.objects.create(name=name.strip())
-                    return JsonResponse({
-                        "message": "created Focus",
-                        "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
-                    }, status=201)
+                    return JsonResponse(model_to_dict(created, fields=[field.name for field in created._meta.fields]), status=201)
                 else:
                     already.deleted = False
                     already.save()
-                    return JsonResponse({
-                        "message": "undeleted Focus",
-                        "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
-                    }, status=200)
+                    return JsonResponse(model_to_dict(already, fields=[field.name for field in already._meta.fields]), status=200)
             else:
                 return JsonResponse({
                     "error": f"require non blank name for new focus, found {name=}"
@@ -89,10 +82,7 @@ def focuss(request: HttpRequest, *args, **kwargs):
         if name:
             founds = Focus.objects.filter(name__icontains=name, deleted=False)
             if founds is not None:
-                return JsonResponse({
-                    "message": "success",
-                    "matched": [model_to_dict(instance) for instance in founds]
-                }, status=200)
+                return JsonResponse([model_to_dict(instance) for instance in founds], status=200)
             else:
                 return JsonResponse({
                     "message": f"no focus of name {name} found"

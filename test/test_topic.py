@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from test_subject import create_default_subject
+from test_subject import create_default_subject, erase_default_subject
 
 url_test = 'http://localhost:8000/api/topics'
 
@@ -10,9 +10,11 @@ TEST_TOPIC_NAME = "thebesttopic"
 TEST_TOPIC_NEXT_NAME = "thenextbesttopic"
 
 def test_topic():
-    created = create_default_topic()
+    created, subject = create_default_topic()
     updated = update_default_topic(created)
     delete_default_topic(created.get('id'))
+    erase_default_topic(created.get('id'))
+    erase_default_subject(subject.get('id'))
 
 def update_default_topic(updatable):
     updatable['name'] = TEST_TOPIC_NEXT_NAME
@@ -38,7 +40,7 @@ def create_default_topic_for_name(name: str):
         assert created.get('name') == name
         assert int(created.get('subject')) == int(subject.get('id'))
         assert not created.get('deleted')
-        return created
+        return created, subject
 
 def delete_default_topic(id: int):
     response = requests.delete(url_test, params={
@@ -47,4 +49,11 @@ def delete_default_topic(id: int):
     assert response.status_code < 300
     detail = json.loads(response.content.decode('utf-8'))
     assert detail.get('deleted')
+
+def erase_default_topic(id: int):
+    response = requests.delete(url_test, params={
+        'id': id,
+        'erase': True
+    })
+    assert response.status_code < 300
 

@@ -51,7 +51,18 @@ def erase_default_meetup_role(id: int):
         'id': id,
         'erase': True
     })
-    assert response.status_code < 300
+    code = response.status_code
+    if code >= 300:
+        if code >= 400:
+            if code >= 500:
+                assert code < 500
+            else:
+                print(f"previously erased: meetup role {id}")
+        else:
+            assert code < 400
+    else:
+        # ok
+        pass
 
 def delete_default_meetup_role(id: int):
     response = requests.delete(url_test, params={

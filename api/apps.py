@@ -19,12 +19,12 @@ class ApiConfig(AppConfig):
         """)
         print(f"------------------------------------------------------------")
 
-        self.confirmDefaultUser()
-        self.confirmDefaultOrgs()
-        self.confirmUserOrgs()
-        self.confirmDefaultGroups()
-        self.confirmDefaultPermissions()
-        self.confirmDefaultGroupPermissions()
+        # self.confirmDefaultUser()
+        # self.confirmDefaultOrgs()
+        # self.confirmUserOrgs()
+        # self.confirmDefaultGroups()
+        # self.confirmDefaultPermissions()
+        # self.confirmDefaultGroupPermissions()
 
     def confirmUserOrgs(self):
         print(f"confirmUserOrgs()...")

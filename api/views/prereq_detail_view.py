@@ -42,10 +42,7 @@ def get_prereq_details(request: HttpRequest):
         founds = founds.filter(mandatory=mandatory)
     if not filtered:
         founds = founds[:10]
-    return JsonResponse({
-        "message": f"success",
-        "matched": [model_to_dict(instance) for instance in founds]
-    }, status=200, safe=False)
+    return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
 
 def post_prereq_details(request: HttpRequest):
 
@@ -67,25 +64,23 @@ def post_prereq_details(request: HttpRequest):
 
 
     created = PrereqDetail.objects.create(template=template, prereq_set=prereq_set)
-    return JsonResponse({
-        "message": f"success",
-        "created": model_to_dict(created)
-    }, status=201, safe=False)
+    return JsonResponse(model_to_dict(created), status=201, safe=False)
 
 def delete_prereq_details(request: HttpRequest):
     id = request.GET.get('id')
+    erase = request.GET.get('erase')
     found: QuerySet = PrereqDetail.objects.get(pk=id)
     if not found:
         return JsonResponse({
             "error": f"not found for {id=}"
         }, status=404, safe=False)
     else:
-        found.deleted = True
-        found.save()
-        return JsonResponse({
-            "message": f"success",
-            "deleted": model_to_dict(found)
-        }, status=200, safe=False)
+        if erase:
+            found.delete()
+        else:
+            found.deleted = True
+            found.save()
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
 def put_prereq_details(request: HttpRequest):
     id = request.data.get('id')
@@ -117,7 +112,4 @@ def put_prereq_details(request: HttpRequest):
         found.mandatory = mandatory
 
     found.save()
-    return JsonResponse({
-        "message": f"success",
-        "updated": model_to_dict(found)
-    }, status=200, safe=False)
+    return JsonResponse(model_to_dict(found), status=200, safe=False)

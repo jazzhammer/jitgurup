@@ -11,7 +11,7 @@ from api.models.org import Org
 def facility(request, facility_id):
     found = Facility.objects.get(id=facility_id)
     if found is not None:
-        return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200)
+        return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200, safe=False)
     else:
         return JsonResponse({
             "message": "failure"
@@ -28,18 +28,19 @@ def reset_tests(request):
 def facilitys(request, *args, **kwargs):
     if request.method == 'DELETE':
         id: int = request.GET.get('id')
+        erase = request.GET.get('erase')
         try:
             found = Facility.objects.get(pk=id)
-        except:
+        except Exception as get_e:
             return JsonResponse({
-                "error": f"facility not found for update {id=}",
+                "error": f"facility not found for update {id=}: {get_e}",
             }, status=404, safe=False)
-        found.deleted = True
-        found.save()
-        return JsonResponse({
-            "message": "success",
-            "deleted": model_to_dict(found)
-        }, status=200, safe=False)
+        if erase:
+            found.delete()
+        else:
+            found.deleted = True
+            found.save()
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'PUT':
         id: int = request.data.get('id')
@@ -83,10 +84,7 @@ def facilitys(request, *args, **kwargs):
         found.description = description
         found.org = org
         found.deleted = False
-        return JsonResponse({
-            "message": "success",
-            "updated": model_to_dict(found)
-        }, status=200, safe=False)
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'POST':
         name: str = request.data.get('name')
@@ -123,26 +121,16 @@ def facilitys(request, *args, **kwargs):
                 if dupe.deleted:
                     dupe.deleted = False
                     dupe.save()
-                    return JsonResponse({
-                        "message": "success",
-                        "created": model_to_dict(dupe)
-                    }, status=201, safe=False)
+                    return JsonResponse(model_to_dict(dupe), status=201, safe=False)
         created = Facility.objects.create(name=name, org=org, description=description)
-        return JsonResponse({
-            "message": "success",
-            "created": model_to_dict(created)
-        }, status=201, safe=False)
+        return JsonResponse(model_to_dict(created), status=201, safe=False)
 
     if request.method == 'GET':
         id = request.GET.get('id')
         if id:
             try:
                 found = Facility.objects.get(pk=id)
-                return JsonResponse({
-                    'message': 'success',
-                    'matched': [model_to_dict(found)]
-                },
-                status=200, safe=False)
+                return JsonResponse([model_to_dict(found)], status=200, safe=False)
             except:
                 return JsonResponse({
                     'error:': f'no facility found for {id=}'
@@ -160,7 +148,4 @@ def facilitys(request, *args, **kwargs):
             founds = founds.filter(org_id=org_id)
         if not filtered:
             founds = Facility.objects.all()[:10]
-        return JsonResponse({
-            "message": "success",
-            "matched": [model_to_dict(instance) for instance in founds]
-        }, status=200)
+        return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)

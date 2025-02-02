@@ -34,10 +34,7 @@ def get_prereq_sets(request: HttpRequest):
         }, status=400, safe=False)
     if rule_numerator:
         founds = founds.filter(required_by=required_by_template)
-    return JsonResponse({
-        "message": f"success",
-        "matched": [model_to_dict(instance) for instance in founds]
-    }, status=200, safe=False)
+    return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
 
 def post_prereq_sets(request: HttpRequest):
     required_by_id = request.data.get('required_by_id')
@@ -48,25 +45,23 @@ def post_prereq_sets(request: HttpRequest):
         return JsonResponse({
             "error": f"require required_by meetup template id to create, {required_by_id=}"
         }, status=400, safe=False)
-    return JsonResponse({
-        "message": f"success",
-        "created": model_to_dict(created)
-    }, status=200, safe=False)
+    return JsonResponse(model_to_dict(created), status=200, safe=False)
 
 def delete_prereq_sets(request: HttpRequest):
     id = request.GET.get('id')
+    erase = request.GET.get('erase')
     found: QuerySet = PrereqSet.objects.get(pk=id)
     if not found:
         return JsonResponse({
             "error": f"not found for {id=}"
         }, status=404, safe=False)
     else:
-        found.deleted = True
-        found.save()
-        return JsonResponse({
-            "message": f"success",
-            "deleted": model_to_dict(found)
-        }, status=200, safe=False)
+        if erase:
+            found.delete()
+        else:
+            found.deleted = True
+            found.save()
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
 def put_prereq_sets(request: HttpRequest):
     id = request.data.get('id')
@@ -88,7 +83,4 @@ def put_prereq_sets(request: HttpRequest):
     if rule_numerator:
         found.rule_numerator = rule_numerator
     found.save()
-    return JsonResponse({
-        "message": f"success",
-        "updated": model_to_dict(found)
-    }, status=200, safe=False)
+    return JsonResponse(model_to_dict(found), status=200, safe=False)

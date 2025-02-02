@@ -10,6 +10,7 @@ from django.http import JsonResponse, HttpRequest
 def topics(request: HttpRequest):
     if request.method == 'DELETE':
         id = request.GET.get('id')
+        erase = request.GET.get('erase')
         if not id:
             return JsonResponse({
                 "error": f"require id to delete topic, found {id=}"
@@ -21,12 +22,12 @@ def topics(request: HttpRequest):
                     "error": f"topic not found for {id=}"
                 }, status=404, safe=False)
             else:
-                found.deleted = True
-                found.save()
-                return JsonResponse({
-                    "message": "success",
-                    "deleted": model_to_dict(found)
-                }, status=200)
+                if erase:
+                    found.delete()
+                else:
+                    found.deleted = True
+                    found.save()
+                return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'PUT':
         id = request.data.get('id')
@@ -54,7 +55,7 @@ def topics(request: HttpRequest):
             if subject_id:
                 found.subject = Subject.objects.get(pk=subject_id)
                 found.save()
-            return JsonResponse(model_to_dict(found), status=200)
+            return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'POST':
         name: str = request.data.get('name')
@@ -64,11 +65,11 @@ def topics(request: HttpRequest):
                 already = Topic.objects.filter(name__iexact=name, subject_id=subject_id).first()
                 if already is None:
                     created = Topic.objects.create(name=name.strip(), subject_id=subject_id)
-                    return JsonResponse(model_to_dict(created, fields=[field.name for field in created._meta.fields]), status=201)
+                    return JsonResponse(model_to_dict(created, fields=[field.name for field in created._meta.fields]), status=201, safe=False)
                 else:
                     already.deleted = False
                     already.save()
-                    return JsonResponse(model_to_dict(already, fields=[field.name for field in already._meta.fields]), status=200)
+                    return JsonResponse(model_to_dict(already, fields=[field.name for field in already._meta.fields]), status=200, safe=False)
             else:
                 return JsonResponse({
                     "error": f"require non blank name and subject_id for new topic, found {name=} {subject_id=}"

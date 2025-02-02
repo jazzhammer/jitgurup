@@ -10,6 +10,7 @@ def test_crew_template():
     created = create_default_crew_template()
     updated = update_default_crew_template(created, TEST_CREW_TEMPLATE_NEXT_NAME)
     delete_default_crew_template(created.get('id'))
+    erase_default_crew_template(created.get('id'))
 
 def update_default_crew_template(updatable, next_name):
     updatable['name'] = next_name
@@ -41,3 +42,14 @@ def delete_default_crew_template(id: int):
     detail = json.loads(response.content.decode('utf-8'))
     assert detail.get('deleted')
 
+def erase_default_crew_template(id: int):
+    response = requests.delete(url_test, params={
+        'id': id,
+        'erase': True
+    })
+    if response.status_code >= 300:
+        if response.status_code >= 400:
+            if response.status_code >= 500:
+                assert response.status_code < 500
+            else:
+                print(f'crew temmplate not found {id} for erasure')

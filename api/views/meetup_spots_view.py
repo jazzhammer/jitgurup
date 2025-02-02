@@ -2,13 +2,10 @@ from django.db.models import QuerySet
 from django.forms import model_to_dict
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
-from rest_framework.parsers import JSONParser
 
 from api.models.facility import Facility
 from api.models.meetup_spot import MeetupSpot
 from api.models.spot_type import SpotType
-from api.serializers.meetup_spot_serializer import MeetupSpotSerializer
-
 
 @api_view(['GET'])
 def meetup_spot(request, meetup_spot_id):
@@ -31,18 +28,19 @@ def reset_tests(request):
 def meetup_spots(request, *args, **kwargs):
     if request.method == 'DELETE':
         id: int = request.GET.get('id')
+        erase = request.GET.get('erase')
         try:
             found = MeetupSpot.objects.get(pk=id)
         except:
             return JsonResponse({
                 "error": f"meetup_spot not found for delete {id=}",
             }, status=404, safe=False)
-        found.deleted = True
-        found.save()
-        return JsonResponse({
-            "message": "success",
-            "deleted": model_to_dict(found)
-        }, status=200, safe=False)
+        if erase:
+            found.delete()
+        else:
+            found.deleted = True
+            found.save()
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
 
 
@@ -104,10 +102,7 @@ def meetup_spots(request, *args, **kwargs):
         found.spot_type = spot_type
         found.deleted = False
         found.save()
-        return JsonResponse({
-            "message": "success",
-            "updated": model_to_dict(found)
-        }, status=200, safe=False)
+        return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'POST':
         name: str = request.data.get('name')
@@ -155,10 +150,7 @@ def meetup_spots(request, *args, **kwargs):
                 if dupe.deleted:
                     dupe.deleted = False
                     dupe.save()
-                    return JsonResponse({
-                        "message": "success",
-                        "created": model_to_dict(dupe)
-                    }, status=201, safe=False)
+                    return JsonResponse(model_to_dict(dupe), status=201, safe=False)
 
         created = MeetupSpot.objects.create(
             name=name,
@@ -166,10 +158,7 @@ def meetup_spots(request, *args, **kwargs):
             spot_type_id=spot_type_id,
             facility_id=facility_id
         )
-        return JsonResponse({
-            "message": "success",
-            "created": model_to_dict(created)
-        }, status=201, safe=False)
+        return JsonResponse(model_to_dict(created), status=201, safe=False)
 
 
     if request.method == 'GET':
@@ -177,11 +166,7 @@ def meetup_spots(request, *args, **kwargs):
         if id:
             try:
                 found = MeetupSpot.objects.get(pk=id)
-                return JsonResponse({
-                    'message': 'success',
-                    'matched': [model_to_dict(found)]
-                },
-                status=200, safe=False)
+                return JsonResponse([model_to_dict(found)], status=200, safe=False)
             except:
                 return JsonResponse({
                     'error:': f'no meetup_spot found for {id=}'
@@ -191,17 +176,11 @@ def meetup_spots(request, *args, **kwargs):
         if name is not None:
             found = MeetupSpot.objects.filter(name=name).first()
             if found is not None:
-                return JsonResponse({
-                    "message": "success",
-                    "matched": model_to_dict(found, fields=[field.name for field in found._meta.fields])
-                }, status=200)
+                return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200)
         if facility_id is not None:
                 founds = MeetupSpot.objects.filter(facility_id=facility_id)
                 if founds is not None:
-                    return JsonResponse({
-                        "message": "success",
-                        "matched": [model_to_dict(found, fields=[field.name for field in found._meta.fields]) for found in founds]
-                    }, status=200)
+                    return JsonResponse([model_to_dict(found, fields=[field.name for field in found._meta.fields]) for found in founds], status=200, safe=False)
 
         else:
             return JsonResponse({

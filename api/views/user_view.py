@@ -1,18 +1,11 @@
-import http
-import io
-from rest_framework.parsers import JSONParser
 from django.contrib.auth.models import User
 
-from api.models.org import Org
 from api.models.person import Person
-from api.models.user_org import UserOrg
 from api.models.user_session import UserSession
-from api.serializers.user_serializers import CreatePersonSerializer, CreateUserSerializer
 from django.forms.models import model_to_dict
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.http import JsonResponse
-from django.contrib.auth import authenticate
 import psycopg2
 from jitgurup.settings import DATABASES
 
@@ -189,8 +182,11 @@ def users(request, *args, **kwargs):
                 safe=False
             )
     if request.method == 'POST':
-        username = request.POST.get("username")
-        password = request.POST.get("password")
+        data = request.data
+        if len(data) == 0:
+            data = request.POST
+        username = data.get("username")
+        password = data.get("password")
         if password:
             if username:
                 found = authenticate(username=username, password=password)
@@ -204,14 +200,14 @@ def users(request, *args, **kwargs):
                     }, status=404, safe=False)
         else:
 
-            last_name = request.POST.get("last_name")
+            last_name = data.get("last_name")
             if last_name:
                 last_name = last_name.strip()
-            first_name = request.POST.get("first_name")
+            first_name = data.get("first_name")
             if first_name:
                 first_name = first_name.strip()
 
-            username = request.POST.get("username")
+            username = data.get("username")
             if username:
                 founds = User.objects.filter(username=username)
                 if founds and len(founds) > 0:

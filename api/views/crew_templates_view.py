@@ -40,17 +40,18 @@ def crew_templates(request: HttpRequest, *args, **kwargs):
             return JsonResponse({"detail": f"require id to update crew_template"}, status=400, safe=False)
     if request.method == 'DELETE':
         id = request.GET.get('id')
+        erase = request.GET.get('erase')
         if id:
             try:
                 found = CrewTemplate.objects.get(pk=id)
-                found.deleted = True
-                found.save()
-                return JsonResponse({
-                    "message": f"deleted for key {id=}",
-                    "deleted": model_to_dict(found)
-                }, status=200, safe=False)
+                if erase:
+                    found.delete()
+                else:
+                    found.deleted = True
+                    found.save()
+                return JsonResponse(model_to_dict(found), status=200, safe=False)
             except Exception as e:
-                return JsonResponse({"detail": "error", "error": e}, status=500, safe=False)
+                return JsonResponse({"detail": "error", "error": f"{e}"}, status=404, safe=False)
         else:
             return JsonResponse({"detail": f"require id to delete crew_template"}, status=400, safe=False)
 

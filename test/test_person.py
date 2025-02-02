@@ -58,6 +58,13 @@ def erase_default_person_for_names(first_name: str, last_name: str):
             requests.delete(url_test, params={'id': found.get('id'), 'erase': True})
 
 
+def erase_default_person(id: int):
+    response = requests.delete(url_test, params={
+        'id': id,
+        'erase': True
+    })
+    assert response.status_code < 300
+
 def delete_default_person(id: int):
     response = requests.delete(url_test, params={
         'id': id

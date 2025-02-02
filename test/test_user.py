@@ -15,7 +15,7 @@ TEST_USER_NEXT_USERNAME = "LIL old username_next"
 def test_user():
     created = create_default_user()
     # updated = update_default_user(created)
-    erase_default_user()
+    erase_default_user(created.get('id'))
 
 
 # def update_default_user(updatable):
@@ -79,6 +79,12 @@ def erase_default_user():
             'id': found.get('id'),
             'erase': True
         })
+
+def erase_default_user(id: int):
+    response = requests.delete(url_test, params={
+        'id': id,
+        'erase': True
+    })
 
 def delete_default_user(id: int):
     response = requests.delete(url_test, params={

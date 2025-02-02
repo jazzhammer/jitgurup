@@ -16,7 +16,7 @@ from api.models.subject import Subject
 def meetup_template(request, meetup_template_id):
     found = MeetupTemplate.objects.get(id=meetup_template_id)
     if found is not None:
-        return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200)
+        return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200, safe=False)
     else:
         return JsonResponse({
             "message": "failure"
@@ -26,6 +26,7 @@ def meetup_template(request, meetup_template_id):
 def meetup_templates(request, *args, **kwargs):
     if request.method == 'DELETE':
         id = request.GET.get('id')
+        erase = request.GET.get('erase')
         if id:
             try:
                 found = MeetupTemplate.objects.get(pk=id)
@@ -33,12 +34,12 @@ def meetup_templates(request, *args, **kwargs):
                 return JsonResponse({
                     "error": f"meetup_template not found for {id=}",
                 }, status=404)
-            found.deleted = True
-            found.save()
-            return JsonResponse({
-                "message": "success",
-                "deleted": model_to_dict(found)
-            }, status=200)
+            if erase:
+                found.delete()
+            else:
+                found.deleted = True
+                found.save()
+            return JsonResponse(model_to_dict(found), status=200, safe=False)
         else:
             return JsonResponse({
                 "error": f"meetup_template not found for {id=}",
@@ -92,10 +93,7 @@ def meetup_templates(request, *args, **kwargs):
                 found.max_minutes = max_minutes
             found.deleted = False
             found.save()
-            return JsonResponse({
-                "message": "success",
-                "updated": model_to_dict(found)
-            }, status=200)
+            return JsonResponse(model_to_dict(found), status=200, false=False)
         else:
             updated = MeetupTemplate.objects.get(pk=id)
             if org_id:
@@ -115,10 +113,7 @@ def meetup_templates(request, *args, **kwargs):
             if max_minutes:
                 updated.max_minutes = max_minutes
             updated.save()
-            return JsonResponse({
-                "message": "success",
-                "updated": model_to_dict(updated)
-            }, status=201)
+            return JsonResponse(model_to_dict(updated), status=201, safe=False)
 
     if request.method == 'POST':
         name = request.data.get('name')
@@ -166,10 +161,7 @@ def meetup_templates(request, *args, **kwargs):
             found.deleted = False
 
             found.save()
-            return JsonResponse({
-                "message": "success",
-                "created": model_to_dict(found)
-            }, status=201)
+            return JsonResponse(model_to_dict(found), status=201, safe=False)
         else:
             created = MeetupTemplate.objects.create(name=name)
             if org_id:
@@ -187,10 +179,7 @@ def meetup_templates(request, *args, **kwargs):
             if max_minutes:
                 created.max_minutes = max_minutes
             created.save()
-            return JsonResponse({
-                "message": "success",
-                "created": model_to_dict(created)
-            }, status=201)
+            return JsonResponse(model_to_dict(created), status=201, safe=False)
 
     if request.method == 'GET':
         name = request.GET.get('name')
@@ -221,7 +210,4 @@ def meetup_templates(request, *args, **kwargs):
             founds = MeetupTemplate.objects.filter(work_in_progress=str(work_in_progress).lower().strip() == 'true')
         if not filtered:
             founds = MeetupTemplate.objects.all().filter(deleted=False)[:10]
-        return JsonResponse({
-            "message": "success",
-            "matched": [model_to_dict(found) for found in founds]
-        }, status=200)
+        return JsonResponse([model_to_dict(found) for found in founds], status=200, safe=False)

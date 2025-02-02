@@ -32,7 +32,10 @@ def meetup_roles(request: HttpRequest, **kwargs):
     elif request.method == 'DELETE':
         id = request.GET.get('id')
         erase = request.GET.get('erase')
-        found = MeetupRole.objects.get(pk=id)
+        try:
+            found = MeetupRole.objects.get(pk=id)
+        except Exception as get_e:
+            return JsonResponse({"message": f"meetup role not found for {id=}"}, status=404, safe=False)
         if erase:
             found.delete()
         else:

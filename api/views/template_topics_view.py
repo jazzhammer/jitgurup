@@ -28,14 +28,18 @@ def reset_tests(request):
 def template_topics(request, *args, **kwargs):
     if request.method == 'DELETE':
         id: int = request.GET.get('id')
+        erase = request.GET.get('erase')
         try:
             found = TemplateTopic.objects.get(pk=id)
         except:
             return JsonResponse({
                 "error": f"template_topic not found for update {id=}",
             }, status=404, safe=False)
-        found.deleted = True
-        found.save()
+        if erase:
+            found.delete()
+        else:
+            found.deleted = True
+            found.save()
         return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'PUT':
@@ -134,4 +138,4 @@ def template_topics(request, *args, **kwargs):
         if not filtered:
             founds = TemplateTopic.objects.all()[:10]
         if founds:
-            return JsonResponse([model_to_dict(instance) for instance in founds], status=200)
+            return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)

@@ -13,6 +13,7 @@ def test_crew():
     created = create_default_crew()
     updated = update_default_crew(created)
     delete_default_crew(created.get('id'))
+    erase_default_crew(created.get('id'))
 
 def update_default_crew(updatable):
     next_crew_template = create_default_crew_template_for_name('next crew template name')
@@ -39,10 +40,6 @@ def delete_crew(crew):
     deleted = json.loads(response.content.decode('utf-8'))
     assert deleted.get('deleted')
     return deleted
-
-def create_crew_for_name(name):
-    # crew_template = create_default_crew_template()
-    return create_default_crew_for_name(name)
 
 def create_default_crew():
 
