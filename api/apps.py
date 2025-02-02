@@ -130,8 +130,17 @@ class ApiConfig(AppConfig):
             print(f"unable to confirm default groups: {e}")
 
     def create_common_user(self, username, email, password):
-        from django.contrib.auth.models import User
-        return User.objects.create_user(username, email, password)
+        environment = os.getenv('ENVIRONMENT')
+        if environment == 'local':
+            from django.contrib.auth.models import User
+            created = User.objects.create_user(username, email, password)
+            created.last_name = 'common'
+            created.first_name = 'user'
+            created.save()
+            return created
+        else:
+            print(f"no common user available for environment: {environment}")
+            return None
 
     def confirmDefaultUsers(self):
         print(f"confirmDefaultUsers...")
@@ -141,18 +150,23 @@ class ApiConfig(AppConfig):
             password = os.getenv('DEFAULT_PASSWORD')
             username = os.getenv('DEFAULT_USERNAME')
             print(f"{f"confirming user":32}: {username}")
+            created = None
             try:
                 found = User.objects.get(username=username)
                 if not found:
                     print(f"{f"confirming user":32}: not found, creating...")
                     created = self.create_common_user(username, 'admin@jitguru.com', password)
-                    print(f"{f"":32}: ok: {created.id}")
                 else:
                     print(f"{f"":32}: ok: {found.id}")
+                    return
             except Exception as not_found_e:
                 print(f"{f"confirming user":32}: not found, creating...")
                 created = self.create_common_user(username, 'admin@jitguru.com', password)
-                print(f"{f"":32}: ok: {created.get('id')}")
+
+            if created:
+                print(f"{f"":32}: ok: {created.id}")
+            else:
+                print(f"{f"":32}: fail: for previous errors")
 
         except Exception as user_e:
             print(f"error confirming user: {username}: {user_e}")

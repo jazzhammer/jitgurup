@@ -1,3 +1,6 @@
+import os
+from uuid import uuid4
+
 from django.contrib.auth.models import User
 
 from api.models.person import Person
@@ -8,6 +11,8 @@ from rest_framework.decorators import api_view
 from django.http import JsonResponse
 import psycopg2
 from jitgurup.settings import DATABASES
+from dotenv import load_dotenv
+load_dotenv()
 
 from django.contrib.auth import authenticate
 @api_view(['GET'])
@@ -124,6 +129,21 @@ def users(request, *args, **kwargs):
 
     if request.method == 'GET':
         id: str = request.GET.get('id')
+        group_name = request.GET.get('group_name')
+        if group_name and group_name == 'common':
+            try:
+                common_username = os.getenv("DEFAULT_USERNAME")
+                if common_username:
+                    founds = User.objects.filter(username=common_username)
+                    if len(founds) > 0:
+                        found = founds[0]
+                        session = UserSession.objects.create(user=found, session_id=uuid4())
+                        found_dict = model_to_dict(found)
+                        found_dict['session'] = model_to_dict(session)
+                        return JsonResponse(found_dict, status=200, safe=False)
+            except Exception as common_e:
+                return JsonResponse({"message": f"error retrieving common users: {common_e}"}, status=500, safe=False)
+
         if id:
             try:
                found = User.objects.get(pk=int(id))

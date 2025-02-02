@@ -1,6 +1,9 @@
 import json
 
 import requests
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 url_test = 'http://localhost:8000/api/users'
 
@@ -16,6 +19,11 @@ def test_user():
     created = create_default_user()
     # updated = update_default_user(created)
     erase_default_user(created.get('id'))
+
+    if os.getenv('ENVIRONMENT') == 'local':
+        response = requests.get(url_test, params={'group_name': 'common'})
+        common_user = json.loads(response.content.decode('utf8'))
+        assert common_user
 
 def get_default_user():
     response = requests.get(url_test, params={'username': TEST_USER_USERNAME})
