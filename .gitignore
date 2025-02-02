@@ -2,4 +2,7 @@
 .venv/
 *__pycache__*
 db.sqlite3
-provision/
+.env_local
+env_local
+.env
+working

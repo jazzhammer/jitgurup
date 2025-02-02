@@ -17,19 +17,6 @@ def test_user():
     # updated = update_default_user(created)
     erase_default_user(created.get('id'))
 
-
-# def update_default_user(updatable):
-#     updatable['first_name'] = TEST_USER_NEXT_NAME
-#     updatable['last_name'] = TEST_USER_NEXT_LAST_NAME
-#     response = requests.put(url_test, data=updatable)
-#     assert response.status_code < 300
-#     detail = json.loads(response.content.decode('utf-8'))
-#     updated = detail.get('updated')
-#     assert updated
-#     assert updated.get('first_name').lower() == TEST_USER_NEXT_NAME.lower()
-#     assert updated.get('last_name').lower() == TEST_USER_NEXT_LAST_NAME.lower()
-#     assert updated.get('deleted') == False
-
 def get_default_user():
     response = requests.get(url_test, params={'username': TEST_USER_USERNAME})
     try:

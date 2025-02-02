@@ -64,6 +64,7 @@ def post(request: HttpRequest):
     name = request.data.get('name')
     if name:
         name = name.strip()
+
     description = request.data.get('description')
     if description:
         description = description.strip()

@@ -1,6 +1,9 @@
+import os
+
 from django.apps import AppConfig
 from django.forms import model_to_dict
-
+from dotenv import load_dotenv
+load_dotenv()
 
 
 class ApiConfig(AppConfig):
@@ -19,7 +22,7 @@ class ApiConfig(AppConfig):
         """)
         print(f"------------------------------------------------------------")
 
-        # self.confirmDefaultUser()
+        self.confirmDefaultUsers()
         # self.confirmDefaultOrgs()
         # self.confirmUserOrgs()
         # self.confirmDefaultGroups()
@@ -126,9 +129,48 @@ class ApiConfig(AppConfig):
         except Exception as e:
             print(f"unable to confirm default groups: {e}")
 
-    def confirmDefaultUser(self):
-        print(f"confirmDefaultUser...")
+    def create_common_user(self, username, email, password):
         from django.contrib.auth.models import User
+        return User.objects.create_user(username, email, password)
+
+    def confirmDefaultUsers(self):
+        print(f"confirmDefaultUsers...")
+        from django.contrib.auth.models import User
+
+        try:
+            password = os.getenv('DEFAULT_PASSWORD')
+            username = os.getenv('DEFAULT_USERNAME')
+            print(f"{f"confirming user":32}: {username}")
+            try:
+                found = User.objects.get(username=username)
+                if not found:
+                    print(f"{f"confirming user":32}: not found, creating...")
+                    created = self.create_common_user(username, 'admin@jitguru.com', password)
+                    print(f"{f"":32}: ok: {created.id}")
+                else:
+                    print(f"{f"":32}: ok: {found.id}")
+            except Exception as not_found_e:
+                print(f"{f"confirming user":32}: not found, creating...")
+                created = self.create_common_user(username, 'admin@jitguru.com', password)
+                print(f"{f"":32}: ok: {created.get('id')}")
+
+        except Exception as user_e:
+            print(f"error confirming user: {username}: {user_e}")
+
+        try:
+            found = User.objects.filter(username="jitguruadmin").first()
+            if found is None:
+                created = User.objects.create_user("jitguruadmin", "admin@jitguru.com", "ilovethejitguru")
+                if created is not None:
+                    print(f"created default user: {created.username}")
+                    created.is_superuser = True
+                    created.is_staff = True
+                    created.last_name = 'jitguru'
+                    created.first_name = 'admin'
+                    created.save()
+        except Exception as e:
+            print(f"unable to confirm default user: {e}")
+
         try:
             found = User.objects.filter(username="jitguruadmin").first()
             if found is None:

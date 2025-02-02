@@ -66,6 +66,7 @@ def meetup(request, **kwargs):
 
     if request.method == 'GET':
         id = request.data.get('id')
+        topic_name = request.data.get('topic_name')
 
         if id:
             try:
@@ -78,6 +79,9 @@ def meetup(request, **kwargs):
                 "message": "success",
                 "matched": [model_to_dict(found)]
             }, status=200, safe=False)
+
+        if topic_name and len(topic_name.strip()) > 0:
+            pass
 
         filtered = False
         founds = Meetup.objects.filter(deleted=False)
