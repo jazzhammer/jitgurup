@@ -11,6 +11,7 @@ from django.http import JsonResponse, HttpRequest
 def subjects(request: HttpRequest, *args, **kwargs):
     if request.method == 'DELETE':
         id = request.GET.get('id')
+        erase = request.GET.get('erase')
         if not id:
             return JsonResponse({
                 "error": f"require id to delete subject, found {id=}"
@@ -22,8 +23,11 @@ def subjects(request: HttpRequest, *args, **kwargs):
                     "error": f"subject not found for {id=}"
                 }, status=404, safe=False)
             else:
-                found.deleted = True
-                found.save()
+                if erase:
+                    found.delete()
+                else:
+                    found.deleted = True
+                    found.save()
                 return JsonResponse(model_to_dict(found), status=200)
 
     if request.method == 'PUT':

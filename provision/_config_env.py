@@ -7,6 +7,7 @@ import shutil
 TACTEON_BUCKET = 'tacteon-ops'
 JITGURU_BUCKET_KEY = "jitguru"
 LOCAL_ENV_FILENAME = '.env_local'
+LOCAL_DJANGO_SETTINGS_FILENAME = 'django_settings_local.py'
 parser = None
 args = None
 WORKING_FOLDER = os.path.join(os.getcwd(), 'working')
@@ -16,12 +17,18 @@ if not os.path.isdir(WORKING_FOLDER):
 
 def config_local():
     status()
-    download_env()
+    download_env_local()
     shutil.copy(os.path.join(WORKING_FOLDER, LOCAL_ENV_FILENAME), os.path.join(os.getcwd(), '.env'))
+    print(f"{"install env_local":32}: ok")
+    shutil.copy(os.path.join(WORKING_FOLDER, LOCAL_DJANGO_SETTINGS_FILENAME), os.path.join(os.getcwd(), 'jitgurup', 'settings.py'))
+    print(f"{"install django_settings_local":32}: ok")
 
-def download_env():
+def download_env_local():
     s3 = boto3.client('s3')
     s3.download_file(TACTEON_BUCKET, os.path.join(JITGURU_BUCKET_KEY, 'env_local'), os.path.join(WORKING_FOLDER, LOCAL_ENV_FILENAME))
+    print(f"{"download env_local":32}: ok")
+    s3.download_file(TACTEON_BUCKET, os.path.join(JITGURU_BUCKET_KEY, 'django_settings_local.py'), os.path.join(WORKING_FOLDER, LOCAL_DJANGO_SETTINGS_FILENAME))
+    print(f"{"download django_settings_local":32}: ok")
 
 def banner():
     print("""
