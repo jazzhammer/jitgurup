@@ -72,6 +72,8 @@ def preferences(request: HttpRequest, *args, **kwargs):
         value: str = request.data.get('value')
         if not name or len(name.strip()) == 0:
             return JsonResponse({"error": f"require name, found {name=}"}, status=400, safe=False)
+        if isinstance(value, int):
+            value = str(value)
         if not value or len(value.strip()) == 0:
             return JsonResponse({"error": f"require value, found {value=}"}, status=400, safe=False)
 
