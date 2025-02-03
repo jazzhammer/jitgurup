@@ -75,10 +75,7 @@ def meetup(request, **kwargs):
                 return JsonResponse({
                     'error': f"no meetup found for {id=}"
                 }, status=404, safe=False)
-            return JsonResponse({
-                "message": "success",
-                "matched": [model_to_dict(found)]
-            }, status=200, safe=False)
+            return JsonResponse([model_to_dict(found)], status=200, safe=False)
 
         if topic_name and len(topic_name.strip()) > 0:
             pass
@@ -127,7 +124,7 @@ def meetup(request, **kwargs):
             founds = founds.filter(crew_id=crew_id)
 
         if filtered:
-            return JsonResponse(model_to_dict(founds), status=200, safe=False)
+            return JsonResponse([model_to_dict(found) for found in founds], status=200, safe=False)
         else:
             return JsonResponse({
                                     "message": f"require combination of name | start_at | duration | meetup_template | org | facility | meetup_spot | crew for search of meetup"},

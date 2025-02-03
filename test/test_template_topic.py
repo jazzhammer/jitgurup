@@ -57,9 +57,6 @@ def test_template_topic():
 
     erase_default_meetup_template(next_meetup_template.get('id'))
     erase_default_subject(subject.get('id'))
-    erase_default_subject(subject2.get('id'))
-
-    erase_default_subject(subject.get('id'))
 
     erase_default_meetup_template(meetup_templateu.get('id'))
     erase_default_crew_template(crew_templateu.get('id'))

@@ -196,8 +196,21 @@ def users(request, *args, **kwargs):
         if filtered:
             return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
         else:
+            founds_dict = [model_to_dict(found, fields=[
+                'id',
+                'last_login',
+                'is_superuser',
+                'username',
+                'first_name',
+                'last_name',
+                'email',
+                'is_staff',
+                'is_active',
+                'date_joined'
+            ]) for found in founds]
+
             return JsonResponse(
-                [model_to_dict(instance) for instance in founds],
+                founds_dict,
                 status=200,
                 safe=False
             )
