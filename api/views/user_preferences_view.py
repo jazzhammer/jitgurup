@@ -112,6 +112,6 @@ def preferences(request: HttpRequest, *args, **kwargs):
             filtered = True
             founds = founds.filter(name__contains=name)
         if filtered:
-            return JsonResponse({"message": "success", "data": [model_to_dict(instance) for instance in founds]}, status=200, safe=False)
+            return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
         else:
             return JsonResponse([], status=200, safe=False)

@@ -82,6 +82,9 @@ def post(request: HttpRequest):
 
 def get(request: HttpRequest):
     id = request.GET.get('id')
+    if id:
+        if not isinstance(id, int):
+            id = int(id)
     name = request.GET.get('name')
     description = request.GET.get('description')
 
