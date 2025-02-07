@@ -20,7 +20,7 @@ def prereq_details(request: HttpRequest):
         return put_prereq_details(request)
 
 def get_prereq_details(request: HttpRequest):
-    template_id = request.GET.get('template_id')
+    meetup_template_id = request.GET.get('meetup_template_id')
     prereq_set_id = request.GET.get('prereq_set_id')
     mandatory = request.GET.get('mandatory')
     deleted = request.GET.get('deleted')
@@ -29,10 +29,10 @@ def get_prereq_details(request: HttpRequest):
         deleted = False
     founds = PrereqDetail.objects.filter(deleted=deleted)
     filtered = False
-    if template_id:
+    if meetup_template_id:
         filtered = True
-        template = MeetupTemplate.objects.get(pk=template_id)
-        founds = founds.filter(template=template)
+        meetup_template = MeetupTemplate.objects.get(pk=meetup_template_id)
+        founds = founds.filter(template=meetup_template)
     if prereq_set_id:
         filtered = True
         prereq_set = PrereqSet.objects.get(pk=prereq_set_id)
@@ -54,16 +54,16 @@ def post_prereq_details(request: HttpRequest):
             "error": f"require prereq_set id to create, {prereq_set_id=}"
         }, status=400, safe=False)
 
-    template_id = request.data.get('template_id')
+    meetup_template_id = request.data.get('meetup_template_id')
     try:
-        template = MeetupTemplate.objects.get(pk=template_id)
+        meetup_template = MeetupTemplate.objects.get(pk=meetup_template_id)
     except:
         return JsonResponse({
-            "error": f"require meetup_template id to create, {template_id=}"
+            "error": f"require meetup_template id to create, {meetup_template_id=}"
         }, status=400, safe=False)
 
 
-    created = PrereqDetail.objects.create(template=template, prereq_set=prereq_set)
+    created = PrereqDetail.objects.create(meetup_template=meetup_template, prereq_set=prereq_set)
     return JsonResponse(model_to_dict(created), status=201, safe=False)
 
 def delete_prereq_details(request: HttpRequest):
@@ -91,11 +91,11 @@ def put_prereq_details(request: HttpRequest):
             "error": f"not found for {id=}"
         }, status=404, safe=False)
 
-    template_id = request.data.get('template_id')
-    if template_id:
+    meetup_template_id = request.data.get('meetup_template_id')
+    if meetup_template_id:
         try:
-            template = MeetupTemplate.objects.get(pk=template_id)
-            found.template = template
+            meetup_template = MeetupTemplate.objects.get(pk=meetup_template_id)
+            found.meetup_template = meetup_template
         except:
             pass
 

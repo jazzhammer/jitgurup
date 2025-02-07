@@ -4,53 +4,53 @@ from rest_framework.decorators import api_view
 
 from django.contrib.auth.models import User
 
-from api.models.person import Person
-from api.models.user_person import UserPerson
+from api.models.org import Org
+from api.models.user_org import UserOrg
 
 @api_view(["POST", "GET", "DELETE"])
-def user_persons(request, *args, **kwargs):
+def user_orgs(request, *args, **kwargs):
     if request.method == 'POST':
         user_id = request.data.get('user_id')
         if user_id:
             user = User.objects.get(pk=user_id)
             if user:
-                person_id = request.data.get('person_id')
-                if person_id:
-                    person = Person.objects.get(pk=person_id)
-                    if person:
-                        created = UserPerson.objects.create(user=user, person=person)
+                org_id = request.data.get('org_id')
+                if org_id:
+                    org = Org.objects.get(pk=org_id)
+                    if org:
+                        created = UserOrg.objects.create(user=user, org=org)
                         return JsonResponse(model_to_dict(created), status=201, safe=False)
                     else:
-                        return JsonResponse({"message": f"require person for user_person, found {person_id=}"}, status=400, safe=False)
+                        return JsonResponse({"message": f"require org for user_org, found {org_id=}"}, status=400, safe=False)
                 else:
-                    return JsonResponse({"message": f"require person for user_person, found {person_id=}"}, status=400,
+                    return JsonResponse({"message": f"require org for user_org, found {org_id=}"}, status=400,
                                         safe=False)
             else:
-                return JsonResponse({"message": f"require user for user_person, found {user_id=}"}, status=400,
+                return JsonResponse({"message": f"require user for user_org, found {user_id=}"}, status=400,
                                     safe=False)
         else:
-            return JsonResponse({"message": f"require user for user_person, found {user_id=}"}, status=400,
+            return JsonResponse({"message": f"require user for user_org, found {user_id=}"}, status=400,
                                 safe=False)
 
     if request.method == 'GET':
         id = request.GET.get('id')
         user_id = request.GET.get('user_id')
-        person_id = request.GET.get('person_id')
+        org_id = request.GET.get('org_id')
 
         if id:
             try:
-                found = UserPerson.objects.get(pk=id)
+                found = UserOrg.objects.get(pk=id)
                 return JsonResponse(model_to_dict(found), status=200, safe=False)
             except Exception as get_e:
-                return JsonResponse({"message": f"error getting user_person for {id=}"}, status=400, safe=False)
-        founds = UserPerson.objects.all()
+                return JsonResponse({"message": f"error getting user_org for {id=}"}, status=400, safe=False)
+        founds = UserOrg.objects.all()
         filtered = False
         if user_id:
             filtered = True
             founds = founds.filter(user_id=user_id)
-        if person_id:
+        if org_id:
             filtered = True
-            founds = founds.filter(person_id=person_id)
+            founds = founds.filter(org_id=org_id)
         if filtered:
             return JsonResponse([model_to_dict(found) for found in founds], status=200, safe=False)
         else:
@@ -63,13 +63,13 @@ def user_persons(request, *args, **kwargs):
         erase = request.GET.get('erase')
         if not id:
             return JsonResponse({
-                "error": f"require id to delete user_person, found {id=}"
+                "error": f"require id to delete user_org, found {id=}"
             }, status=400, safe=False)
         else:
-            found = UserPerson.objects.get(pk=id)
+            found = UserOrg.objects.get(pk=id)
             if not found:
                 return JsonResponse({
-                    "error": f"user_person not found for {id=}"
+                    "error": f"user_org not found for {id=}"
                 }, status=404, safe=False)
             else:
                 if erase:
@@ -83,7 +83,7 @@ def user_persons(request, *args, **kwargs):
 @api_view(['POST'])
 def reset_tests(request, *args, **kwargs):
     User.objects.filter().exclude(username='jitguruadmin').delete()
-    UserPerson.objects.all().delete()
+    UserOrg.objects.all().delete()
     return JsonResponse({
         "message": "success",
         "deleted": "all"

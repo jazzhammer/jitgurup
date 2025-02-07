@@ -27,8 +27,7 @@ def create_default_role():
         'name': TEST_ROLE_NAME
     })
     assert response.status_code < 300
-    details = json.loads(response.content.decode('utf-8'))
-    created = details.get('created')
+    created = json.loads(response.content.decode('utf-8'))
     assert created.get('name') == TEST_ROLE_NAME
     assert not created.get('deleted')
     return created
@@ -38,6 +37,6 @@ def delete_default_role(id: int):
         'id': id
     })
     assert response.status_code < 300
-    detail = json.loads(response.content.decode('utf-8'))
-    assert detail.get('deleted').get('deleted')
+    deleted = json.loads(response.content.decode('utf-8'))
+    assert deleted.get('deleted')
 

@@ -15,10 +15,7 @@ def meetup_spot_in_meetups(request, meetup_spot_in_meetup_id, **kwargs):
         serializer = MeetupSpotInMeetupSerializer(data=new_meetup_spot_in_meetup)
         if serializer.is_valid():
             MeetupSpotInMeetup.objects.create(**serializer.validated_data)
-            return JsonResponse({
-                "message": "success",
-                "created": serializer.validated_data
-            }, status=201)
+            return JsonResponse(serializer.validated_data, status=201, safe=False)
         else:
             return JsonResponse({
                 "message": "failure: minimum object field requirements not met"

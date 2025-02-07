@@ -25,10 +25,7 @@ def topic_resources(request: HttpRequest, *args, **kwargs):
             else:
                 found.deleted = True
                 found.save()
-                return JsonResponse({
-                    "message": "success",
-                    "deleted": model_to_dict(found)
-                }, status=200)
+                return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'PUT':
         id = request.data.get('id')
@@ -52,10 +49,7 @@ def topic_resources(request: HttpRequest, *args, **kwargs):
                     return JsonResponse({
                         "error": f"require non blank description to update topic_resource, found {description=}"
                     }, status=400, safe=False)
-            return JsonResponse({
-                "message": "success",
-                "updated": model_to_dict(found)
-            }, status=200)
+            return JsonResponse(model_to_dict(found), status=200)
 
     if request.method == 'POST':
         description: str = request.data.get('description')
@@ -77,20 +71,14 @@ def topic_resources(request: HttpRequest, *args, **kwargs):
                 "message": f"topic_resource requires url. found {url=}"
             }, status=400)
         created = TopicResource.objects.create(topic=topic, url=url, description=description)
-        return JsonResponse({
-            "message": f"success",
-            'created': model_to_dict(created)
-        }, status=201, safe=False)
+        return JsonResponse(model_to_dict(created), status=201, safe=False)
 
     elif request.method == 'GET':
         id = request.GET.get('id')
         if id:
             try:
                 found = TopicResource.objects.get(pk=id)
-                return JsonResponse({
-                    'message': 'success',
-                    'matched': [model_to_dict(found)]
-                },
+                return JsonResponse([model_to_dict(found)],
                 status=200, safe=False)
             except:
                 return JsonResponse({
@@ -109,19 +97,13 @@ def topic_resources(request: HttpRequest, *args, **kwargs):
             founds = founds.filter(topic_id=topic_id)
         if filtered:
             if founds is not None:
-                return JsonResponse({
-                    "message": "success",
-                    "matched": [model_to_dict(instance) for instance in founds]
-                }, status=200)
+                return JsonResponse([model_to_dict(instance) for instance in founds], status=200)
             else:
                 return JsonResponse({
                     "message": f"no topic_resource found {description=}, {topic_id=}"
                 }, status=404)
         else:
             founds = TopicResource.objects.all()[:10]
-            return JsonResponse({
-                "message": "success",
-                "matched": [model_to_dict(instance) for instance in founds]
-            }, status=200)
+            return JsonResponse([model_to_dict(instance) for instance in founds], status=200)
 
 

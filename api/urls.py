@@ -5,7 +5,7 @@ from .views import user_view, user_preferences_view, orgs_view, security_permiss
     meetup_templates_view, tools_view, focuss_view, subjects_view, topics_view, prereq_set_view, prereq_detail_view, \
     roles_view, crew_templates_view, template_roles_view, crews_view, signups_view, template_topics_view, \
     topic_resources_view, meetup_roles_view, meetup_view, village_view, learning_modalitys_view, \
-    preferred_modalitys_view
+    preferred_modalitys_view, user_session_view
 
 urlpatterns = [
     path('crews', crews_view.crews),
@@ -42,10 +42,12 @@ urlpatterns = [
     path('users/<int:user_id>', user_view.user),
     path('users/meetup_spot', user_meetup_spots_view.user_meetup_spots),
     path('users/permission', security_permissions_view.security_permissions),
+    path('users/persons', user_persons_view.user_persons),
     path('users/preference', user_preferences_view.preferences),
     path('users/orgs', orgs_view.user_orgs),
     path('users/persons', user_persons_view.user_persons),
     path('users/user_groups', user_view.user_user_groups),
+    path('users/usersessions', user_session_view.user_sessions),
     path('tests/reset', user_view.reset_tests),
     path('tests/reset/facility', facilitys_view.reset_tests),
 

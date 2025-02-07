@@ -21,7 +21,7 @@ class UserOrg(models.Model):
     def assignUserDefault(user, org_name, org_description):
         found_org = Org.objects.filter(name=org_name).first()
         if found_org == None:
-            created = self.objects.create(name=org_name)
+            created = UserOrg.objects.create(name=org_name)
             if created is not None:
                 print(f"created org: {created.name}")
                 created.description = org_description

@@ -52,8 +52,7 @@ def create_default_template_role():
 
 def create_default_template_role_for_name_description(name: str, description: str):
     crew_template = create_default_crew_template()
-    alreadys = get_template_role_for_name_crew_template(TEST_TEMPLATE_ROLE_NAME, crew_template.get('id'))
-    matches = alreadys.get('matched')
+    matches = get_template_role_for_name_crew_template(TEST_TEMPLATE_ROLE_NAME, crew_template.get('id'))
     for match in matches:
         delete_template_role(match)
 
@@ -63,15 +62,7 @@ def create_default_template_role_for_name_description(name: str, description: st
         'crew_template_id': crew_template.get('id')
     })
     assert response.status_code < 300
-    details = json.loads(response.content.decode('utf-8'))
-    created = details.get('created')
-    updated = details.get('updated')
-    if updated:
-        assert updated.get('name') == name
-        assert updated.get('description') == description
-        assert updated.get('crew_template') == crew_template.get('id')
-        assert not updated.get('deleted')
-        return updated
+    created = json.loads(response.content.decode('utf-8'))
     if created:
         assert created.get('name') == name
         assert created.get('description') == description

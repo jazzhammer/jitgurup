@@ -125,10 +125,7 @@ def template_roles(request, *args, **kwargs):
                 if dupe.deleted:
                     dupe.deleted = False
                     dupe.save()
-                    return JsonResponse({
-                        "message": "success",
-                        "created": model_to_dict(dupe)
-                    }, status=201, safe=False)
+                    return JsonResponse(model_to_dict(dupe), status=201, safe=False)
         created = TemplateRole.objects.create(
             name=name,
             crew_template=crew_template,
@@ -137,10 +134,7 @@ def template_roles(request, *args, **kwargs):
         if max_count is not None:
             created.max_count = max_count
             created.save()
-        return JsonResponse({
-            "message": "success",
-            "created": model_to_dict(created)
-        }, status=201, safe=False)
+        return JsonResponse(model_to_dict(created), status=201, safe=False)
 
     if request.method == 'GET':
         name = request.GET.get('name')
@@ -148,27 +142,15 @@ def template_roles(request, *args, **kwargs):
         if name:
             found = TemplateRole.objects.filter(name=name).first()
             if found:
-                return JsonResponse({
-                    "message": "success",
-                    "matched": [model_to_dict(found)]
-                }, status=200, safe=False)
+                return JsonResponse([model_to_dict(found)], status=200, safe=False)
             else:
-                return JsonResponse({
-                    "message": "success",
-                    "matched": []
-                }, status=200, safe=False)
+                return JsonResponse([], status=200, safe=False)
         if crew_template_id:
                 founds = TemplateRole.objects.filter(crew_template_id=crew_template_id)
                 if founds:
-                    return JsonResponse({
-                        "message": "success",
-                        "matched": [model_to_dict(instance) for instance in founds]
-                    }, status=200)
+                    return JsonResponse([model_to_dict(instance) for instance in founds], status=200)
                 else:
-                    return JsonResponse({
-                        "message": "success",
-                        "matched": []
-                    }, status=400, safe=False)
+                    return JsonResponse([], status=400, safe=False)
 
         else:
             return JsonResponse({

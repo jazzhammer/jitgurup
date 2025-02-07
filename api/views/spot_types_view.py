@@ -7,12 +7,12 @@ from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 
 from api.models.spot_type import SpotType
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 
 from api.serializers.spot_type_serializer import SpotTypeSerializer
 from jitgurup.settings import DATABASES
 
-def reset_tests(request, *args, **kwargs):
+def reset_tests(request: HttpRequest):
     try:
         default_db = DATABASES["default"]
         connection = psycopg2.connect(
@@ -148,9 +148,7 @@ def user_spot_types(request, *args, **kwargs):
             spot_type = SpotType.objects.get(id=userSpotTypeDict["spot_type_id"])
             spot_typeDict = model_to_dict(spot_type, fields=[field.name for field in spot_type._meta.fields])
             spot_typeDicts.append(spot_typeDict)
-        return JsonResponse({
-            "assigned": spot_typeDicts
-        })
+        return JsonResponse(spot_typeDicts, status=200, safe=False)
 
     elif request.method == "POST":
         body = request.body

@@ -15,10 +15,7 @@ def org_persons(request, org_person_id, **kwargs):
         serializer = OrgPersonSerializer(data=new_org_person)
         if serializer.is_valid():
             OrgPerson.objects.create(**serializer.validated_data)
-            return JsonResponse({
-                "message": "success",
-                "created": serializer.validated_data
-            }, status=201)
+            return JsonResponse(serializer.validated_data, status=201, safe=False)
         else:
             return JsonResponse({
                 "message": "failure: minimum object field requirements not met"

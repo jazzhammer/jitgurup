@@ -376,7 +376,4 @@ def confirmUserOrgs():
 @api_view(["POST"])
 def seed_default_user_orgs(request, *args, **kwargs):
     confirmed = confirmUserOrgs()
-    return JsonResponse({
-        "message": "success",
-        "seeded": confirmed
-    }, status=200)
+    return JsonResponse(confirmed, status=200)

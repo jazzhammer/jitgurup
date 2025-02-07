@@ -115,10 +115,7 @@ def signups(request, *args, **kwargs):
                     dupe.deleted = False
 
                     dupe.save()
-                    return JsonResponse({
-                        "message": "success",
-                        "created": model_to_dict(dupe)
-                    }, status=201, safe=False)
+                    return JsonResponse(model_to_dict(dupe), status=201, safe=False)
 
         created = Signup.objects.create(
             person=person,

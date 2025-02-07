@@ -19,31 +19,31 @@ def prereq_sets(request: HttpRequest):
         return put_prereq_sets(request)
 
 def get_prereq_sets(request: HttpRequest):
-    required_by_id = request.GET.get('required_by_id')
+    meetup_template_id = request.GET.get('meetup_template_id')
     rule_numerator = request.GET.get('rule_numerator')
     deleted = request.GET.get('deleted')
     if not deleted:
         deleted = False
     founds = PrereqSet.objects.filter(deleted=deleted)
-    if required_by_id:
-        required_by_template = MeetupTemplate.objects.get(pk=required_by_id)
-        founds = founds.filter(required_by=required_by_template)
+    if meetup_template_id:
+        meetup_template = MeetupTemplate.objects.get(pk=meetup_template_id)
+        founds = founds.filter(meetup_template=meetup_template)
     else:
         return JsonResponse({
-            "error": f"require required_by meetup template id for search, found {required_by_id=}"
+            "error": f"require meetup_template meetup template id for search, found {meetup_template_id=}"
         }, status=400, safe=False)
     if rule_numerator:
-        founds = founds.filter(required_by=required_by_template)
+        founds = founds.filter(meetup_template=meetup_template)
     return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
 
 def post_prereq_sets(request: HttpRequest):
-    required_by_id = request.data.get('required_by_id')
-    if required_by_id:
-        required_by_template = MeetupTemplate.objects.get(pk=required_by_id)
-        created = PrereqSet.objects.create(required_by=required_by_template)
+    meetup_template_id = request.data.get('meetup_template_id')
+    if meetup_template_id:
+        meetup_template = MeetupTemplate.objects.get(pk=meetup_template_id)
+        created = PrereqSet.objects.create(meetup_template=meetup_template)
     else:
         return JsonResponse({
-            "error": f"require required_by meetup template id to create, {required_by_id=}"
+            "error": f"require meetup_template meetup template id to create, {meetup_template_id=}"
         }, status=400, safe=False)
     return JsonResponse(model_to_dict(created), status=200, safe=False)
 
@@ -71,15 +71,15 @@ def put_prereq_sets(request: HttpRequest):
         return JsonResponse({
             "error": f"not found for {id=}"
         }, status=404, safe=False)
-    required_by_id = request.data.get('required_by_id')
-    if required_by_id:
-        required_by = MeetupTemplate.objects.get(pk=required_by_id)
-        if not required_by:
+    meetup_template_id = request.data.get('meetup_template_id')
+    if meetup_template_id:
+        meetup_template = MeetupTemplate.objects.get(pk=meetup_template_id)
+        if not meetup_template:
             return JsonResponse({
-                "error": f"require required_by meetup template id to update, found {required_by_id=}"
+                "error": f"require meetup_template meetup template id to update, found {meetup_template_id=}"
             }, status=400, safe=False)
         else:
-            found.required_by = required_by
+            found.meetup_template = meetup_template
     if rule_numerator:
         found.rule_numerator = rule_numerator
     found.save()

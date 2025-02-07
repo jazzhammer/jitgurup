@@ -84,12 +84,12 @@ def update_default_prereq_set(updatable):
         org3,
     ) = create_default_meetup_template_for_name('another name')
 
-    updatable['required_by_id'] = next_meetup_template.get('id')
+    updatable['meetup_template_id'] = next_meetup_template.get('id')
     response = requests.put(url_test, data={**updatable})
     assert response.status_code == 200
     updated = json.loads(response.content.decode('utf-8'))
     assert updated
-    assert updated.get('required_by') == next_meetup_template.get('id')
+    assert updated.get('meetup_template') == next_meetup_template.get('id')
     assert updated.get('deleted') == False
     return (
         updated,
@@ -133,12 +133,12 @@ def create_default_prereq_set():
 
 def create_default_prereq_set_for_template(meetup_template):
     response = requests.post(url_test, data={
-        'required_by_id': meetup_template.get('id')
+        'meetup_template_id': meetup_template.get('id')
     })
     assert response.status_code < 300
     created = json.loads(response.content.decode('utf-8'))
     if created:
-        assert created.get('required_by') == meetup_template.get('id')
+        assert created.get('meetup_template') == meetup_template.get('id')
         assert not created.get('deleted')
         return created
 

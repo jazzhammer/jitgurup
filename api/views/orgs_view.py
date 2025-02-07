@@ -155,9 +155,7 @@ def user_orgs(request, *args, **kwargs):
             org = Org.objects.get(id=userOrgDict["org"])
             orgDict = model_to_dict(org, fields=[field.name for field in org._meta.fields])
             orgDicts.append(orgDict)
-        return JsonResponse({
-            "assigned": orgDicts
-        })
+        return JsonResponse(orgDicts, status=200, safe=False)
 
     elif request.method == "POST":
         body = request.body

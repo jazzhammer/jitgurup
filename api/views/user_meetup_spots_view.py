@@ -33,19 +33,25 @@ def user_meetup_spots(request, *args, **kwargs):
             serializer = UserMeetupSpotSerializer(data=newUserMeetupSpot)
             if serializer.is_valid():
                 created = UserMeetupSpot.objects.create(**serializer.validated_data)
-                return JsonResponse({
-                    "message": "success",
-                    "created": model_to_dict(created, fields=[field.name for field in created._meta.fields])
-                }, status=201)
+                return JsonResponse(
+                    model_to_dict(created, fields=[field.name for field in created._meta.fields]),
+                    status=201,
+                    safe=False
+                )
             else:
-                return JsonResponse({
-                    "message": "failure"
-                }, status=400)
+                return JsonResponse({"message": "failure"},
+                                    status=400,
+                                    safe=False
+                )
         else:
-            return JsonResponse({
-                "message": "previously created",
-                "created": model_to_dict(already, fields=[field.name for field in already._meta.fields])
-            }, status=200)
+            return JsonResponse(
+                model_to_dict(
+                    already,
+                    fields=[field.name for field in already._meta.fields]
+                ),
+                status=200,
+                safe=False
+            )
 
     if request.method == 'GET':
         user_id = request.query_params['user_id'] if 'user_id' in request.query_params else None
@@ -54,17 +60,18 @@ def user_meetup_spots(request, *args, **kwargs):
             # return all matching meetupSpots
             founds = UserMeetupSpot.objects.filter(user_id=user_id)
             if founds is not None:
-                return JsonResponse({
-                    "message": "success",
-                    "matched": [model_to_dict(found, fields=[field.name for field in found._meta.fields]) for found in founds]
-                }, status=200)
+                return JsonResponse(
+                    [model_to_dict(found, fields=[field.name for field in found._meta.fields]) for found in founds],
+                    status=200,
+                    safe=False
+                )
         if meetup_spot_id is not None:
-                founds = UserMeetupSpot.objects.filter(meetup_spot_id=meetup_spot_id)
-                if founds is not None:
-                    return JsonResponse({
-                        "message": "success",
-                        "matched": [model_to_dict(found, fields=[field.name for field in found._meta.fields]) for found in founds]
-                    }, status=200)
+            founds = UserMeetupSpot.objects.filter(meetup_spot_id=meetup_spot_id)
+            if founds is not None:
+                return JsonResponse(
+                    [model_to_dict(found, fields=[field.name for field in found._meta.fields]) for found in founds],
+                    status=200
+                )
 
         else:
             return JsonResponse({
