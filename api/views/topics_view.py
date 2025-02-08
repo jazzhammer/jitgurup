@@ -88,7 +88,15 @@ def topics(request: HttpRequest):
         if subject_id:
             founds = founds.filter(subject_id=subject_id, deleted=False)
         if founds:
-            return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
+            dicts = [model_to_dict(instance) for instance in founds]
+            for dict in dicts:
+                subject_id = dict.get('subject')
+                try:
+                    subject = Subject.objects.get(pk=subject_id)
+                    dict['subject'] = model_to_dict(subject)
+                except Exception as subject_e:
+                    pass
+            return JsonResponse(dicts, status=200, safe=False)
         else:
             return JsonResponse([], status=200, safe=False)
 

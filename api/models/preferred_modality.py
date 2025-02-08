@@ -9,7 +9,7 @@ from api.models.topic import Topic
 class PreferredModality(models.Model):
     person = models.ForeignKey(Person, on_delete=DO_NOTHING)
     topic = models.ForeignKey(Topic, on_delete=DO_NOTHING)
-    learning_modality = models.ForeignKey(LearningModality, on_delete=DO_NOTHING)
+    learning_modality = models.ForeignKey(LearningModality, null=True, on_delete=DO_NOTHING)
 
     class Meta:
         indexes = [

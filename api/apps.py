@@ -15,10 +15,10 @@ class ApiConfig(AppConfig):
         print(f"""
                       .__                       _____.__
         _____  ______ |__|   ____  ____   _____/ ____\__| ____
-        \__  \ \____ \|  | _/ ___\/  _ \ /    \   __\|  |/ ___| 
-         / __ \|  |_> >  | \  \__(  <_> )   |  \  |  |  / /_/  >
-        (____  /   __/|__|  \___  >____/|___|  /__|  |__\___  /
-             \/|__|             \/           \/        /_____/
+        \\__  \\ \\____ \\|  | _/ ___\\/  _ \\ /    \\   __\\|  |/ ___| 
+         / __ \\|  |_> >  | \\  \\__(  <_> )   |  \\  |  |  / /_/  >
+        (____  /   __/|__|  \\___  >____/|___|  /__|  |__\\___  /
+             \\/|__|             \\/           \\/        /_____/
         """)
         print(f"------------------------------------------------------------")
 
@@ -145,12 +145,16 @@ class ApiConfig(AppConfig):
     def confirmDefaultUsers(self):
         print(f"confirmDefaultUsers...")
         from django.contrib.auth.models import User
+        from api.models.person import Person
+        from api.models.user_person import UserPerson
 
         try:
             password = os.getenv('DEFAULT_PASSWORD')
             username = os.getenv('DEFAULT_USERNAME')
             print(f"{f"confirming user":32}: {username}")
             created = None
+            found = None
+            confirmable = None
             try:
                 found = User.objects.get(username=username)
                 if not found:
@@ -158,15 +162,30 @@ class ApiConfig(AppConfig):
                     created = self.create_common_user(username, 'admin@jitguru.com', password)
                 else:
                     print(f"{f"":32}: ok: {found.id}")
-                    return
             except Exception as not_found_e:
                 print(f"{f"confirming user":32}: not found, creating...")
                 created = self.create_common_user(username, 'admin@jitguru.com', password)
 
             if created:
                 print(f"{f"":32}: ok: {created.id}")
+                confirmable = created
+            elif found:
+                print(f"{f"":32}: ok: {found.id}")
+                confirmable = found
             else:
                 print(f"{f"":32}: fail: for previous errors")
+                return
+
+        #     confirm user person
+            user_person = None
+            try:
+                user_person = UserPerson.objects.get(user_id=confirmable.id)
+            except Exception as user_person_e:
+                pass
+            if not user_person:
+                person = Person.objects.create(user=confirmable, last_name='mcdude',  first_name='das dudin')
+                UserPerson.objects.create(user=confirmable, person=person)
+                return
 
         except Exception as user_e:
             print(f"error confirming user: {username}: {user_e}")
