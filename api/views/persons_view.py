@@ -91,7 +91,7 @@ def persons(request: HttpRequest):
                 and api_preferredmodality.topic_id = {topic_id}
                 """
             if user_id:
-                query = f"{query} and api_person.user_id not {user_id}"
+                query = f"{query} and api_person.user_id <> {user_id}"
             founds = Person.objects.raw(query)
             dicts = [model_to_dict(found) for found in founds]
             return JsonResponse(dicts, status=200, safe=False)

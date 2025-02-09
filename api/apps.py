@@ -3,6 +3,9 @@ import os
 from django.apps import AppConfig
 from django.forms import model_to_dict
 from dotenv import load_dotenv
+
+
+
 load_dotenv()
 
 
@@ -14,7 +17,7 @@ class ApiConfig(AppConfig):
         print(f"============================================================")
         print(f"""
                       .__                       _____.__
-        _____  ______ |__|   ____  ____   _____/ ____\__| ____
+        _____  ______ |__|   ____  ____   _____/ ____\\__| ____
         \\__  \\ \\____ \\|  | _/ ___\\/  _ \\ /    \\   __\\|  |/ ___| 
          / __ \\|  |_> >  | \\  \\__(  <_> )   |  \\  |  |  / /_/  >
         (____  /   __/|__|  \\___  >____/|___|  /__|  |__\\___  /
@@ -22,13 +25,61 @@ class ApiConfig(AppConfig):
         """)
         print(f"------------------------------------------------------------")
 
-        self.confirmDefaultUsers()
+        self.confirm_default_users()
         self.confirm_default_subjects()
-        # self.confirmDefaultOrgs()
-        # self.confirmUserOrgs()
-        # self.confirmDefaultGroups()
+        self.confirm_default_orgs()
+        self.confirm_user_orgs()
+        self.confirm_learning_modalitys()
+        self.confirm_preferred_modalitys()
+        self.confirn_default_groups()
         # self.confirmDefaultPermissions()
         # self.confirmDefaultGroupPermissions()
+
+    def confirm_preferred_modalitys(self):
+        from api.models.person import Person
+        from api.models.learning_modality import LearningModality
+        from api.models.topic import Topic
+        import random
+
+        guru_a = Person.objects.get(last_name="guru_a")
+        guru_b = Person.objects.get(last_name="guru_b")
+        guru_c = Person.objects.get(last_name="guru_c")
+
+        learning_modalitys = LearningModality.objects.all()
+        topics_to_assign = random.choices(Topic.objects.all(), k=20)
+
+        for learning_modality in learning_modalitys:
+            for topic in topics_to_assign:
+                self.confirm_preferred_modality(guru_a, topic, learning_modality)
+
+        for learning_modality in learning_modalitys:
+            for topic in topics_to_assign:
+                self.confirm_preferred_modality(guru_b, topic, learning_modality)
+
+        for learning_modality in learning_modalitys:
+            for topic in topics_to_assign:
+                self.confirm_preferred_modality(guru_c, topic, learning_modality)
+
+    def confirm_preferred_modality(self, person, topic, learning_modality):
+        from api.models.preferred_modality import PreferredModality
+
+        already = PreferredModality.objects.filter(person=person, topic=topic, learning_modality=learning_modality)
+        if len(already) == 0:
+            created = PreferredModality.objects.create(person=person, topic=topic, learning_modality=learning_modality)
+
+    def confirm_learning_modalitys(self):
+        confirmed = self.confirm_learning_modality('1:1')
+        confirmed = self.confirm_learning_modality('lecture')
+        confirmed = self.confirm_learning_modality('workshop')
+        confirmed = self.confirm_learning_modality('self_study')
+        confirmed = self.confirm_learning_modality('studio')
+
+    def confirm_learning_modality(self, name: str):
+        from api.models.learning_modality import LearningModality
+        already = LearningModality.objects.filter(name__iexact=name)
+        if len(already) == 0:
+            created = LearningModality.objects.create(name=name)
+            return created
 
     def confirm_default_subject(self, name: str):
         from api.models.subject import Subject
@@ -1387,8 +1438,10 @@ class ApiConfig(AppConfig):
         self.confirm_default_topic(subject, "Sociology of gender")
         self.confirm_default_topic(subject, "Women's History")
 
-    def confirmUserOrgs(self):
-        print(f"confirmUserOrgs()...")
+    def confirm_user_orgs(self):
+        import random
+
+        print(f"confirm_user_orgs()...")
         from api.models.user_org import UserOrg
         from api.models.org import Org
         from django.contrib.auth.models import User
@@ -1434,8 +1487,68 @@ class ApiConfig(AppConfig):
                     facility = Facility.objects.create(org_id=orgMultifacilityDict['id'],name='jitguru facility: henhouse', description='1/3 of multifacility')
                     facility = Facility.objects.create(org_id=orgMultifacilityDict['id'],name='jitguru facility: woodshed', description='2/3 of multifacility')
                     facility = Facility.objects.create(org_id=orgMultifacilityDict['id'],name='jitguru facility: hayshed', description='3/3 of multifacility')
+
+            gurua = User.objects.get(username="gurua")
+            gurub = User.objects.get(username="gurub")
+            guruc = User.objects.get(username="guruc")
+
+            pupila = User.objects.get(username="pupila")
+            pupilb = User.objects.get(username="pupilb")
+            pupilc = User.objects.get(username="pupilc")
+
+            jitguruadmin = User.ogjects.get(username='jitguruadmin')
+            jitguruadmin_orgs = UserOrg.objects.filter(user_id=jitguruadmin.id)
+
+            gurua_orgs = UserOrg.objects.filter(user_id=gurua.id)
+            gurub_orgs = UserOrg.objects.filter(user_id=gurub.id)
+            guruc_orgs = UserOrg.objects.filter(user_id=guruc.id)
+
+            pupila_orgs = UserOrg.objects.filter(user_id=pupila.id)
+            pupilb_orgs = UserOrg.objects.filter(user_id=pupilb.id)
+            pupilc_orgs = UserOrg.objects.filter(user_id=pupilc.id)
+
+            orgs_to_assign = random.choices(Org.objects.all(), k=5)
+
+            if len(jitguruadmin_orgs) < 5:
+                for org in orgs_to_assign:
+                    self.confirm_user_org(jitguruadmin, org)
+
+            if len(gurua_orgs) < 5:
+                for org in orgs_to_assign:
+                    self.confirm_user_org(gurua, org)
+
+            if len(gurub_orgs) < 5:
+                for org in orgs_to_assign:
+                    self.confirm_user_org(gurub, org)
+
+            if len(guruc_orgs) < 5:
+                for org in orgs_to_assign:
+                    self.confirm_user_org(guruc, org)
+
+            if len(pupila_orgs) < 5:
+                for org in orgs_to_assign:
+                    self.confirm_user_org(pupila, org)
+
+            if len(pupilb_orgs) < 5:
+                for org in orgs_to_assign:
+                    self.confirm_user_org(pupilb, org)
+
+            if len(pupilc_orgs) < 5:
+                for org in orgs_to_assign:
+                    self.confirm_user_org(pupilc, org)
+
+
+
+
         except Exception as e:
             print(f"unable to confirm user orgs: {e}")
+
+    def confirm_user_org(self, user, org):
+        from api.models.user_org import UserOrg
+
+        already = UserOrg.objects.filter(user=user, org=org)
+        if len(already) == 0:
+            created = UserOrg.objects.create(user=user, org=org)
 
     def confirmDefaultGroupPermissions(self):
         print(f"confirmDefaultGroupPermissions()...")
@@ -1470,22 +1583,13 @@ class ApiConfig(AppConfig):
         except Exception as e:
             print(f"unable to confirm default permissions: {e}")
 
-    def confirmDefaultGroups(self):
-        print(f"confirmDefaultGroups...")
+    def confirn_default_groups(self):
+        print(f"confirm_default_groups...")
         from django.contrib.auth.models import Group
-        try:
-            found = Group.objects.filter(name="admins").first()
-            if found is None:
-                try:
-                    created = Group.objects.create(name="admins")
-                    if created is not None:
-                        print(f"created group: admins")
-                    else:
-                        print(f"unable to create group: admins")
-                except:
-                    print(f"error creating group: admins")
-        except Exception as e:
-            print(f"unable to confirm default groups: {e}")
+
+        admins = Group.objects.filter(name="admins")
+        if len(admins) == 0:
+            created = Group.objects.create(name="admins")
 
     def create_common_user(self, username, email, password):
         environment = os.getenv('ENVIRONMENT')
@@ -1577,8 +1681,8 @@ class ApiConfig(AppConfig):
             print(f"unable to confirm default user: {e}")
 
 
-    def confirmDefaultUsers(self):
-        print(f"confirmDefaultUsers...")
+    def confirm_default_users(self):
+        print(f"confirm_default_users...")
         from django.contrib.auth.models import User
         password = os.getenv('DEFAULT_PASSWORD')
         username = os.getenv('DEFAULT_USERNAME')
@@ -1589,9 +1693,13 @@ class ApiConfig(AppConfig):
         guru_b = self.confirm_default_user("gurub", password, "guru_b", "bravo")
         guru_c = self.confirm_default_user("guruc", password, "guru_c", "charlie")
 
+        pupil_a = self.confirm_default_user("pupila", password, "pupil_a", "angus")
+        pupil_b = self.confirm_default_user("pupilb", password, "pupil_b", "beaner")
+        pupil_c = self.confirm_default_user("pupilc", password, "pupil_c", "chowder")
 
-    def confirmDefaultOrg(self, name, description):
-        print(f"confirmDefaultOrg({name})...")
+
+    def confirm_default_org(self, name, description):
+        print(f"confirm_default_org({name})...")
         from api.models.org import Org
         try:
             found = Org.objects.filter(name=name).first()
@@ -1606,8 +1714,133 @@ class ApiConfig(AppConfig):
         except Exception as e:
             print(f"unable to confirm default org {name}: {e}")
 
-    def confirmDefaultOrgs(self):
-        print(f"confirmDefaultOrgs...")
-        self.confirmDefaultOrg('jitguru:community', "demonstrates distributed instruction and learning without a facility")
-        self.confirmDefaultOrg('jitguru:facility', "demonstrates distributed instruction and learning centered in one physical faciliity")
-        self.confirmDefaultOrg('jitguru:multifacility', "demonstrates distributed instruction and learning centered more than one physical faciliity")
+    def confirm_default_orgs(self):
+        import csv
+        from api.models.org import Org
+
+        print(f"confirm_default_orgs...")
+        self.confirm_default_org('jitguru:community', "demonstrates distributed instruction and learning without a facility")
+        self.confirm_default_org('jitguru:facility', "demonstrates distributed instruction and learning centered in one physical faciliity")
+        self.confirm_default_org('jitguru:multifacility', "demonstrates distributed instruction and learning centered more than one physical faciliity")
+
+        if Org.objects.all().count() < 4:
+
+            folder = os.path.join(os.getcwd(), "resource", "ODEF_v2.1_EN")
+            filepath = os.path.join(folder, "ODEF_v2_1.csv")
+            with open(filepath) as source:
+                reader = csv.reader(source)
+                for row in reader:
+                    index = row[0]
+                    source_id = row[1]
+                    name = row[2]
+                    facility_type = row[3]
+                    authority_name = row[4]
+                    isced010 = row[5]
+                    isced020 = row[6]
+                    isced1 = row[7]
+                    isced2 = row[8]
+                    isced3 = row[9]
+                    isced4plus = row[10]
+                    olms_status = row[11]
+                    full_addr = row[12]
+                    unit = row[13]
+                    street_no = row[14]
+                    street_name = row[15]
+                    city = row[16]
+                    prov_terr = row[17]
+                    postal_code = row[18]
+                    pruid = row[19]
+                    csdname = row[20]
+                    csduid = row[21]
+                    longitude = row[22]
+                    latitude = row[23]
+                    geo_source = row[24]
+                    provider = row[25]
+                    cmaname = row[26]
+                    cmauid = row[27]
+                    alreadys = Org.objects.filter(name__iexact=name)
+                    if len(alreadys) == 0:
+                        created = Org.objects.create(
+                            name=name,
+                            facility_type=facility_type,
+                            authority_name=authority_name,
+                            isced010=isced010,
+                            isced020=isced020,
+                            isced1=isced1,
+                            isced2=isced2,
+                            isced3=isced3,
+                            isced4plus=isced4plus,
+                            olms_status=olms_status,
+                            full_addr=full_addr,
+                            unit=unit,
+                            street_no=street_no,
+                            street_name=street_name,
+                            city=city,
+                            prov_terr=prov_terr,
+                            postal_code=postal_code,
+                            pruid=pruid,
+                            csdname=csdname,
+                            csduid=csduid,
+                            longitude=longitude,
+                            latitude=latitude,
+                            geo_source=geo_source,
+                            provider=provider,
+                            cmaname=cmaname,
+                            cmauid=cmauid,
+                        )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+'38a0123e19d42c1636d9'
+'761013'
+'Sainte-Germaine-Cousin'
+'Public'
+'..'
+'..'
+'1'
+'1'
+'0'
+'0'
+'0'
+'0'
+'1880
+48e Avenue MontrÈal H1A2Y6'
+''
+'1880'
+'48e avenue'
+'MontrÈal'
+'QC'
+'H1A2Y6'
+'24'
+'MontrÈal'
+'2466023'
+'-73.501651'
+'45.667625'
+'Source'
+'Province of QuÈbec'
+'MontrÈal'
+'462'
+                
+                """
