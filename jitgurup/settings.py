@@ -55,7 +55,7 @@ MIDDLEWARE = [
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = (
        'http://localhost:5173',
-       'https://localhost:5173',
+       'http://10.0.0.10:5173',
 )
 ROOT_URLCONF = 'jitgurup.urls'
 
