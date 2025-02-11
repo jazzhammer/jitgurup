@@ -9,9 +9,15 @@ from api.models.org import Org
 
 
 class Meetup(models.Model):
-    start_at = models.DateTimeField()
+    start_at = models.DateTimeField(null=True)
+
+    year = models.IntegerField(default=0)
+    month = models.IntegerField(default=0)
+    dom = models.IntegerField(default=0)
+    hour = models.IntegerField(default=0)
+    minute = models.IntegerField(default=0)
     # in minutes
-    duration = models.IntegerField()
+    duration = models.IntegerField(default=20)
 
     # at least copied from the meetup template
     # likely modified by the guru hosting the meetup

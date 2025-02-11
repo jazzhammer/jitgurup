@@ -11,7 +11,7 @@ from api.models.org import Org
 def facility(request, facility_id):
     found = Facility.objects.get(id=facility_id)
     if found is not None:
-        return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200, safe=False)
+        return JsonResponse(build(model_to_dict(found)), status=200, safe=False)
     else:
         return JsonResponse({
             "message": "failure"
@@ -40,7 +40,7 @@ def facilitys(request, *args, **kwargs):
         else:
             found.deleted = True
             found.save()
-        return JsonResponse(model_to_dict(found), status=200, safe=False)
+        return JsonResponse(build(model_to_dict(found)), status=200, safe=False)
 
     if request.method == 'PUT':
         id: int = request.data.get('id')
@@ -121,16 +121,16 @@ def facilitys(request, *args, **kwargs):
                 if dupe.deleted:
                     dupe.deleted = False
                     dupe.save()
-                    return JsonResponse(model_to_dict(dupe), status=201, safe=False)
+                    return JsonResponse(build(model_to_dict(dupe)), status=201, safe=False)
         created = Facility.objects.create(name=name, org=org, description=description)
-        return JsonResponse(model_to_dict(created), status=201, safe=False)
+        return JsonResponse(build(model_to_dict(created)), status=201, safe=False)
 
     if request.method == 'GET':
         id = request.GET.get('id')
         if id:
             try:
                 found = Facility.objects.get(pk=id)
-                return JsonResponse([model_to_dict(found)], status=200, safe=False)
+                return JsonResponse([build(model_to_dict(found))], status=200, safe=False)
             except:
                 return JsonResponse({
                     'error:': f'no facility found for {id=}'
@@ -148,4 +148,15 @@ def facilitys(request, *args, **kwargs):
             founds = founds.filter(org_id=org_id)
         if not filtered:
             founds = Facility.objects.all()[:10]
-        return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
+        return JsonResponse([build(model_to_dict(instance)) for instance in founds], status=200, safe=False)
+
+def build(facility: Facility):
+    dict = model_to_dict(facility)
+    org_id = dict.get('org')
+    dict['org_id'] = org_id
+    try:
+        org = Org.objects.get(pk=org_id)
+        dict['org'] = model_to_dict(org)
+    except Exception as org_e:
+        pass
+    return dict

@@ -32,8 +32,21 @@ class ApiConfig(AppConfig):
         self.confirm_learning_modalitys()
         self.confirm_preferred_modalitys()
         self.confirn_default_groups()
+        self.confirm_default_roles()
         # self.confirmDefaultPermissions()
         # self.confirmDefaultGroupPermissions()
+
+
+    def confirm_default_role(self, name: str):
+        from api.models.role import Role
+        if len(Role.objects.filter(name__iexact=name)) == 0:
+            return Role.objects.create(name=name)
+
+    def confirm_default_roles(self):
+        self.confirm_default_role('guru')
+        self.confirm_default_role('pupil')
+        self.confirm_default_role('observer')
+
 
     def confirm_preferred_modalitys(self):
         from api.models.person import Person
@@ -1496,7 +1509,7 @@ class ApiConfig(AppConfig):
             pupilb = User.objects.get(username="pupilb")
             pupilc = User.objects.get(username="pupilc")
 
-            jitguruadmin = User.ogjects.get(username='jitguruadmin')
+            jitguruadmin = User.objects.get(username='jitguruadmin')
             jitguruadmin_orgs = UserOrg.objects.filter(user_id=jitguruadmin.id)
 
             gurua_orgs = UserOrg.objects.filter(user_id=gurua.id)

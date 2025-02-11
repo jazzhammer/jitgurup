@@ -14,6 +14,12 @@ from api.models.org import Org
 @api_view(["POST", "GET", "PUT", "DELETE"])
 def meetup(request, **kwargs):
     if request.method == 'POST':
+        year = request.data.get('year')
+        month = request.data.get('month')
+        dom = request.data.get('dom')
+        hour = request.data.get('hour')
+        minute = request.data.get('minute')
+        user_id = request.data.get('user_id')
         start_at: str = request.data.get('start_at')
         # in minutes
         duration: int = request.data.get('duration')
