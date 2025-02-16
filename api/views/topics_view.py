@@ -82,6 +82,7 @@ def topics(request: HttpRequest):
     elif request.method == 'GET':
         name = request.GET.get('name')
         subject_id = request.GET.get('subject_id')
+
         founds = Topic.objects.all()
         if name:
             founds = founds.filter(name__icontains=name, deleted=False)
@@ -101,3 +102,6 @@ def topics(request: HttpRequest):
             return JsonResponse([], status=200, safe=False)
 
 
+def for_meetup_id(meetup_id):
+    Topic.objects.raw("select api_topic.* from ")
+    pass

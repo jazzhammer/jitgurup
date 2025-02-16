@@ -5,6 +5,8 @@ from api.models.facility import Facility
 from api.models.meetup_spot import MeetupSpot
 from api.models.meetup_template import MeetupTemplate
 from api.models.org import Org
+from api.models.topic import Topic
+
 
 class Meetup(models.Model):
     # value as datetime.datetime object, utc
@@ -31,6 +33,7 @@ class Meetup(models.Model):
     facility = models.ForeignKey(Facility, null=True, on_delete=DO_NOTHING)
     meetup_spot = models.ForeignKey(MeetupSpot, null=True, on_delete=DO_NOTHING)
     deleted = models.BooleanField(default=False)
+    topic = models.ForeignKey(Topic, null=True, on_delete=DO_NOTHING)
 
     class Meta:
         indexes = [

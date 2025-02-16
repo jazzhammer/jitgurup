@@ -14,6 +14,8 @@ from api.models.meetup_template import MeetupTemplate
 from api.models.org import Org
 from api.models.person import Person
 from api.models.signup import Signup
+from api.models.subject import Subject
+from api.models.topic import Topic
 
 
 @api_view(["POST", "GET", "PUT", "DELETE"])
@@ -21,6 +23,7 @@ def meetup(request, **kwargs):
     if request.method == 'POST':
         meetup_role_id = request.data.get('meetup_role_id')
         user_id = request.data.get('user_id')
+        topic_id = request.data.get('topic_id')
         person = None
         if user_id:
             try:
@@ -39,9 +42,11 @@ def meetup(request, **kwargs):
             start_at = datetime.strptime(utc, "%Y-%m-%dT%H:%M:%S")
             start_at_unix = start_at.timestamp()
         # in minutes
-        duration: int = request.data.get('duration')
-        if not duration or duration < 5:
+        duration = request.data.get('duration')
+        if not duration:
             duration = 5
+        else:
+            duration = int(duration)
 
         # at least copied from the meetup template
         # likely modified by the guru hosting the meetup
@@ -73,16 +78,26 @@ def meetup(request, **kwargs):
 
         if meetup_template_id:
             created.meetup_template_id = meetup_template_id
+
         if org_id:
             created.org = Org.objects.get(pk=org_id)
+
         if facility_id:
             created.facility = Facility.objects.get(pk=facility_id)
+
         if meetup_spot_id:
             created.meetup_spot = MeetupSpot.objects.get(pk=meetup_spot_id)
+
         if crew_id:
             crew = Crew.objects.get(pk=crew_id)
         else:
             crew = Crew.objects.create(name=created.id, meetup=created)
+
+        if topic_id:
+            topic = Topic.objects.get(pk=topic_id)
+            created.topic = topic
+            created.save()
+
         if name:
             created.name = name
         created.crew = crew
@@ -109,7 +124,6 @@ def meetup(request, **kwargs):
     if request.method == 'GET':
         id = request.data.get('id')
         topic_name = request.data.get('topic_name')
-
         if id:
             try:
                 found = Meetup.objects.get(pk=id)
@@ -158,7 +172,8 @@ def meetup(request, **kwargs):
                 query += f"\nand api_signup.meetup_role_id = {meetup_role_id}"
 
             founds = Meetup.objects.raw(query)
-            return JsonResponse([model_to_dict(found) for found in founds], status=200, safe=False)
+            dicts = build_dicts([model_to_dict(found) for found in founds])
+            return JsonResponse(dicts, status=200, safe=False)
 
         filtered = False
         founds = Meetup.objects.filter(deleted=False)
@@ -186,25 +201,37 @@ def meetup(request, **kwargs):
         if meetup_template_id:
             filtered = True
             founds = founds.filter(meetup_template_id=meetup_template_id)
+
         org_id = request.GET.get('org_id')
         if org_id:
             filtered = True
             founds = founds.filter(org_id=org_id)
+
+        topic_id = request.GET.get('topic_id')
+        if topic_id:
+            filtered = True
+            founds = founds.filter(topic_id=topic_id)
+
         facility_id = request.GET.get('facility_id')
         if facility_id:
             filtered = True
             founds = founds.filter(facility_id=facility_id)
+
         meetup_spot_id = request.GET.get('meetup_spot_id')
         if meetup_spot_id:
             filtered = True
             founds = founds.filter(meetup_spot_id=meetup_spot_id)
+
         crew_id = request.GET.get('crew_id')
         if crew_id:
             filtered = True
             founds = founds.filter(crew_id=crew_id)
 
         if filtered:
-            return JsonResponse([model_to_dict(found) for found in founds], status=200, safe=False)
+
+            dicts = build_dicts([model_to_dict(found) for found in founds])
+
+            return JsonResponse(dicts, status=200, safe=False)
         else:
             return JsonResponse({
                 "message": f"require combination of name | start_at | duration | meetup_template | org | facility | meetup_spot | crew for search of meetup"},
@@ -263,3 +290,48 @@ def meetup(request, **kwargs):
             return JsonResponse({
                 "error": f"unable to update meetup for {id=}"
             }, status=400, safe=False)
+
+def build_dicts(dicts):
+    for dict in dicts:
+        if dict.get('org'):
+            dict['org_id'] = dict['org']
+            try:
+                dict['org'] = model_to_dict(Org.objects.get(pk=dict['org_id']))
+            except Exception as org_e:
+                pass
+
+        if dict.get('topic'):
+            dict['topic_id'] = dict['topic']
+            try:
+                topic = Topic.objects.get(pk=dict['topic_id'])
+                subject = Subject.objects.get(pk=topic.subject_id)
+                topic_dict = model_to_dict(topic)
+                topic_dict['subject_id'] = topic_dict['subject']
+                topic_dict['subject'] = model_to_dict(subject)
+                dict['topic'] = topic_dict
+            except Exception as topic_e:
+                pass
+
+        if dict.get('facility'):
+            dict['facility_id'] = dict['facility']
+            try:
+                dict['facility'] = model_to_dict(Facility.objects.get(pk=dict['facility_id']))
+            except Exception as facility_e:
+                pass
+
+
+        if dict.get('meetup_spot'):
+            dict['meetup_spot_id'] = dict['meetup_spot']
+            try:
+                dict['meetup_spot'] = model_to_dict(MeetupSpot.objects.get(pk=dict['meetup_spot_id']))
+            except Exception as meetup_spot_e:
+                pass
+
+        if dict.get('crew'):
+            dict['crew_id'] = dict['crew']
+            try:
+                dict['crew'] = model_to_dict(Crew.objects.get(pk=dict['crew_id']))
+            except Exception as crew_e:
+                pass
+
+    return dicts
