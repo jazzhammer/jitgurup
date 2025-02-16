@@ -1,16 +1,16 @@
 from django.db import models
 from django.db.models import DO_NOTHING
 
-from api.models.crew import Crew
 from api.models.facility import Facility
 from api.models.meetup_spot import MeetupSpot
 from api.models.meetup_template import MeetupTemplate
 from api.models.org import Org
 
-
 class Meetup(models.Model):
+    # value as datetime.datetime object, utc
     start_at = models.DateTimeField(null=True)
-
+    # value as unix timestamp, utc
+    start_at_unix = models.IntegerField(null=True)
     year = models.IntegerField(default=0)
     month = models.IntegerField(default=0)
     dom = models.IntegerField(default=0)
@@ -30,7 +30,6 @@ class Meetup(models.Model):
     org = models.ForeignKey(Org, null=True, on_delete=DO_NOTHING)
     facility = models.ForeignKey(Facility, null=True, on_delete=DO_NOTHING)
     meetup_spot = models.ForeignKey(MeetupSpot, null=True, on_delete=DO_NOTHING)
-    crew = models.ForeignKey(Crew, null=True, on_delete=DO_NOTHING)
     deleted = models.BooleanField(default=False)
 
     class Meta:

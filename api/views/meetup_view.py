@@ -1,26 +1,43 @@
+from datetime import datetime
+
+from django.contrib.auth.models import User
 from django.forms import model_to_dict
 from django.http import JsonResponse
-from django.utils.dateparse import parse_datetime
 from rest_framework.decorators import api_view
 
 from api.models.crew import Crew
 from api.models.facility import Facility
 from api.models.meetup import Meetup
+from api.models.meetup_role import MeetupRole
 from api.models.meetup_spot import MeetupSpot
 from api.models.meetup_template import MeetupTemplate
 from api.models.org import Org
+from api.models.person import Person
+from api.models.signup import Signup
 
 
 @api_view(["POST", "GET", "PUT", "DELETE"])
 def meetup(request, **kwargs):
     if request.method == 'POST':
-        year = request.data.get('year')
-        month = request.data.get('month')
-        dom = request.data.get('dom')
-        hour = request.data.get('hour')
-        minute = request.data.get('minute')
+        meetup_role_id = request.data.get('meetup_role_id')
         user_id = request.data.get('user_id')
-        start_at: str = request.data.get('start_at')
+        person = None
+        if user_id:
+            try:
+                person = Person.objects.get(user_id=user_id)
+            except Exception as person_e:
+                pass
+
+        # expect utc string,
+        # store as utc integer
+        utc = request.data.get('utc')
+        start_at = None
+        start_at_unix = None
+        if utc:
+            # expecting format: 2025-02-11T13:15:00.302Z
+            utc = utc[0:-5]
+            start_at = datetime.strptime(utc, "%Y-%m-%dT%H:%M:%S")
+            start_at_unix = start_at.timestamp()
         # in minutes
         duration: int = request.data.get('duration')
         if not duration or duration < 5:
@@ -40,18 +57,18 @@ def meetup(request, **kwargs):
         facility_id = request.data.get('facility_id')
         meetup_spot_id = request.data.get('meetup_spot_id')
         crew_id = request.data.get('crew_id')
-
-        try:
-            start_at_dt = parse_datetime(start_at)
-        except:
-            return JsonResponse({
-                'error': f"require valid start_at for meetup, found {start_at=}"
-            }, status=400, safe=False)
+        crew = None
 
         created = Meetup.objects.create(
-            start_at=start_at_dt,
+            start_at=start_at,
+            start_at_unix=start_at_unix,
             duration=duration,
-            name=name
+            name=name,
+            year=start_at.year,
+            month=start_at.month, # jan = 1
+            dom=start_at.day,
+            hour=start_at.hour,
+            minute=start_at.minute
         )
 
         if meetup_template_id:
@@ -63,10 +80,29 @@ def meetup(request, **kwargs):
         if meetup_spot_id:
             created.meetup_spot = MeetupSpot.objects.get(pk=meetup_spot_id)
         if crew_id:
-            created.crew = Crew.objects.get(pk=crew_id)
+            crew = Crew.objects.get(pk=crew_id)
+        else:
+            crew = Crew.objects.create(name=created.id, meetup=created)
         if name:
             created.name = name
+        created.crew = crew
+        # ensure we have a signup for the person if there is a person
         created.save()
+        if person:
+            created_by = User.objects.get(pk=user_id)
+            meetup_role = None
+            if meetup_role_id:
+                try:
+                    meetup_role = MeetupRole.objects.get(pk=meetup_role_id)
+                except Exception as meetup_role_e:
+                    pass
+
+            signup = Signup.objects.create(
+                created_by=created_by,
+                meetup_role=meetup_role,
+                crew=crew,
+                person=person
+            )
 
         return JsonResponse(model_to_dict(created), status=201, safe=False)
 
@@ -85,6 +121,44 @@ def meetup(request, **kwargs):
 
         if topic_name and len(topic_name.strip()) > 0:
             pass
+
+        utc_start = request.GET.get('utc_start')
+        utc_finish = request.GET.get('utc_finish')
+        user_id = request.GET.get('user_id')
+        meetup_role_id = request.GET.get('meetup_role_id')
+
+        if utc_start and utc_finish:
+            # expecting format: 2025-02-11T13:15:00.302Z
+            utc_start = utc_start[0:-5]
+            start = datetime.strptime(utc_start, "%Y-%m-%dT%H:%M:%S")
+            start_unix = start.timestamp()
+
+            utc_finish = utc_finish[0:-5]
+            finish = datetime.strptime(utc_finish, "%Y-%m-%dT%H:%M:%S")
+            finish_unix = finish.timestamp()
+            print(f"meetups search for {start} -> {finish}")
+            query = f"""
+                select 
+                    api_meetup.* 
+                from 
+                    api_meetup,
+                    api_crew,
+                    api_signup,
+                    api_person
+                where 
+                    api_crew.meetup_id = api_meetup.id
+                and api_signup.crew_id = api_crew.id
+                and api_signup.person_id = api_person.id
+                and api_meetup.start_at >= '{start}'
+                and api_meetup.start_at <  '{finish}'
+            """
+            if user_id:
+                query += f"\nand api_person.user_id = {user_id}"
+            if meetup_role_id:
+                query += f"\nand api_signup.meetup_role_id = {meetup_role_id}"
+
+            founds = Meetup.objects.raw(query)
+            return JsonResponse([model_to_dict(found) for found in founds], status=200, safe=False)
 
         filtered = False
         founds = Meetup.objects.filter(deleted=False)
@@ -133,8 +207,8 @@ def meetup(request, **kwargs):
             return JsonResponse([model_to_dict(found) for found in founds], status=200, safe=False)
         else:
             return JsonResponse({
-                                    "message": f"require combination of name | start_at | duration | meetup_template | org | facility | meetup_spot | crew for search of meetup"},
-                                status=400, safe=False)
+                "message": f"require combination of name | start_at | duration | meetup_template | org | facility | meetup_spot | crew for search of meetup"},
+            status=400, safe=False)
 
     if request.method == 'PUT':
         id = request.data.get('id')

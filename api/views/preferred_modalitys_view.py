@@ -9,6 +9,8 @@ from api.models.subject import Subject
 from api.models.topic import Topic
 from api.models.user_person import UserPerson
 
+DEFAULT_PAGE_LENGTH = 20
+PAGE_LENGTH = DEFAULT_PAGE_LENGTH
 
 @api_view(["POST", "GET", "PUT", "DELETE"])
 def preferred_modalitys(request: HttpRequest):
@@ -68,6 +70,14 @@ def preferred_modalitys(request: HttpRequest):
 
     if request.method == 'GET':
         id = request.GET.get('id')
+        page = request.GET.get('page')
+        if not page:
+            page = 0
+        else:
+            if int(page) < 0:
+                page = 0
+        page = int(page)
+
         if id:
             try:
                 found = PreferredModality.objects.get(pk=id)
@@ -92,7 +102,7 @@ def preferred_modalitys(request: HttpRequest):
                     return JsonResponse({"message": f"require person_id or user_id for retrieve preferred_modality, found {user_id=}, {person_id=}"})
 
         filtered = False
-        founds = PreferredModality.objects.all()
+        founds = PreferredModality.objects.all().order_by('topic__name')
         if topic_id:
             filtered = True
             founds = founds.filter(topic_id=topic_id)
@@ -100,11 +110,25 @@ def preferred_modalitys(request: HttpRequest):
             filtered = True
             founds = founds.filter(person_id=person_id)
         if filtered:
+            try:
+                founds = founds[page * PAGE_LENGTH:page * PAGE_LENGTH + PAGE_LENGTH]
+            except Exception as page_e:
+                print(f"page-limiting preferred_modalitys: {page=}-> {page * PAGE_LENGTH}:{page * PAGE_LENGTH + PAGE_LENGTH}-> {page_e}")
+                pass
+
             dicts = [model_to_dict(found) for found in founds]
-            for dict in dicts:
+            for d, dict in enumerate(dicts):
+                # print(f"preferred_modality build: {d}")
                 dict['topic'] = model_to_dict(Topic.objects.get(pk=dict['topic']))
                 dict['topic']['subject_id'] = dict['topic']['subject']
                 dict['topic']['subject'] = model_to_dict(Subject.objects.get(id=dict['topic']['subject']))
+                dict['learning_modality_id'] = dict['learning_modality']
+                try:
+                    learning_modality = LearningModality.objects.get(pk=dict['learning_modality_id']);
+                    dict['learning_modality'] = model_to_dict(learning_modality)
+                except Exception as learning_e:
+                    print(f"error getting learning_modality: {dict['learning_modality_id']}: {learning_e}")
+                    pass
             return JsonResponse(dicts, status=200, safe=False)
         else:
             return JsonResponse({"message": f"require topic | person to retrieve preferred_modality found: {person_id=}, {topic_id=}"}, status=400, safe=False)

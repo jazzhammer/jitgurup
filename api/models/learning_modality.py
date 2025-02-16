@@ -8,3 +8,6 @@ class LearningModality(models.Model):
         indexes = [
             models.Index(fields=['name', 'deleted'])
         ]
+
+    def __str__(self):
+        return f"[{self.id}]{self.name}"

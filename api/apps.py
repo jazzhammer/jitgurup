@@ -32,25 +32,30 @@ class ApiConfig(AppConfig):
         self.confirm_learning_modalitys()
         self.confirm_preferred_modalitys()
         self.confirn_default_groups()
-        self.confirm_default_roles()
+        self.confirm_default_meetup_roles()
         # self.confirmDefaultPermissions()
         # self.confirmDefaultGroupPermissions()
 
 
-    def confirm_default_role(self, name: str):
-        from api.models.role import Role
-        if len(Role.objects.filter(name__iexact=name)) == 0:
-            return Role.objects.create(name=name)
+    def confirm_default_meetup_role(self, name: str):
+        from api.models.meetup_role import MeetupRole
+        if len(MeetupRole.objects.filter(name__iexact=name)) == 0:
+            return MeetupRole.objects.create(name=name)
 
-    def confirm_default_roles(self):
-        self.confirm_default_role('guru')
-        self.confirm_default_role('pupil')
-        self.confirm_default_role('observer')
+    def confirm_default_meetup_roles(self):
+        from api.models.meetup_role import GURU
+        from api.models.meetup_role import PUPIL
+        from api.models.meetup_role import OBSERVER
+
+        self.confirm_default_meetup_role(GURU)
+        self.confirm_default_meetup_role(PUPIL)
+        self.confirm_default_meetup_role(OBSERVER)
 
 
     def confirm_preferred_modalitys(self):
         from api.models.person import Person
         from api.models.learning_modality import LearningModality
+        from api.models.preferred_modality import PreferredModality
         from api.models.topic import Topic
         import random
 
@@ -58,20 +63,27 @@ class ApiConfig(AppConfig):
         guru_b = Person.objects.get(last_name="guru_b")
         guru_c = Person.objects.get(last_name="guru_c")
 
+
         learning_modalitys = LearningModality.objects.all()
         topics_to_assign = random.choices(Topic.objects.all(), k=20)
 
-        for learning_modality in learning_modalitys:
-            for topic in topics_to_assign:
-                self.confirm_preferred_modality(guru_a, topic, learning_modality)
+        already_guru_a = PreferredModality.objects.filter(person=guru_a)
+        if len(already_guru_a) < 20:
+            for learning_modality in learning_modalitys:
+                for topic in topics_to_assign:
+                    self.confirm_preferred_modality(guru_a, topic, learning_modality)
 
-        for learning_modality in learning_modalitys:
-            for topic in topics_to_assign:
-                self.confirm_preferred_modality(guru_b, topic, learning_modality)
+        already_guru_b = PreferredModality.objects.filter(person=guru_b)
+        if len(already_guru_b) < 20:
+            for learning_modality in learning_modalitys:
+                for topic in topics_to_assign:
+                    self.confirm_preferred_modality(guru_b, topic, learning_modality)
 
-        for learning_modality in learning_modalitys:
-            for topic in topics_to_assign:
-                self.confirm_preferred_modality(guru_c, topic, learning_modality)
+        already_guru_b = PreferredModality.objects.filter(person=guru_b)
+        if len(already_guru_b) < 20:
+            for learning_modality in learning_modalitys:
+                for topic in topics_to_assign:
+                    self.confirm_preferred_modality(guru_c, topic, learning_modality)
 
     def confirm_preferred_modality(self, person, topic, learning_modality):
         from api.models.preferred_modality import PreferredModality
@@ -1623,29 +1635,30 @@ class ApiConfig(AppConfig):
         from django.contrib.auth.models import User
 
         try:
-            print(f"{f"confirming user":32}: {username}")
+            # print(f"{f"confirming user":32}: {username}")
             created = None
             found = None
             confirmable = None
             try:
                 found = User.objects.get(username=username)
                 if not found:
-                    print(f"{f"confirming user {username}":32}: not found, creating...")
+                    # print(f"{f"confirming user {username}":32}: not found, creating...")
                     created = self.create_common_user(username, 'admin@jitguru.com', password)
                 else:
-                    print(f"{f"":32}: ok: {found.id}")
+                    pass
+                    # print(f"{f"":32}: ok: {found.id}")
             except Exception as not_found_e:
                 print(f"{f"confirming user":32}: not found, creating...")
                 created = self.create_common_user(username, 'admin@jitguru.com', password)
 
             if created:
-                print(f"{f"":32}: ok: {created.id}")
+                # print(f"{f"":32}: ok: {created.id}")
                 confirmable = created
             elif found:
-                print(f"{f"":32}: ok: {found.id}")
+                # print(f"{f"":32}: ok: {found.id}")
                 confirmable = found
             else:
-                print(f"{f"":32}: fail: for previous errors")
+                # print(f"{f"":32}: fail: for previous errors")
                 return
 
         #     confirm user person

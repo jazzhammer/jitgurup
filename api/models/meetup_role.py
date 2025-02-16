@@ -1,5 +1,8 @@
 from django.db import models
 
+GURU = 'guru'
+PUPIL = 'pupil'
+OBSERVER = 'observer'
 
 class MeetupRole(models.Model):
     name = models.CharField(max_length=24)
@@ -12,3 +15,4 @@ class MeetupRole(models.Model):
 
     def __str__(self):
         return self.name
+

@@ -17,8 +17,11 @@ def meetup_roles(request: HttpRequest, **kwargs):
 
     elif request.method == 'GET':
         id = request.GET.get('id')
-        found = MeetupRole.objects.get(pk=id)
-        return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200)
+        if id:
+            found = MeetupRole.objects.get(pk=id)
+            return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200, safe=False)
+        founds = MeetupRole.objects.all()
+        return JsonResponse([model_to_dict(found) for found in founds], status=200, safe=False)
 
     elif request.method == 'PUT':
         id = request.data.get('id')

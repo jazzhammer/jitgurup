@@ -17,3 +17,5 @@ class Topic(models.Model):
             models.Index(fields=['deleted', 'subject_id']),
         ]
 
+    def __str__(self):
+        return f"[{self.id}]{self.name}"
