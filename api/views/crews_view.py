@@ -58,7 +58,7 @@ def crews(request, *args, **kwargs):
         if name:
             if len(name.strip()) <= 0:
                 return JsonResponse({
-                    "error": f"require name",
+                    "error": f"require name for update",
                 }, status=400, safe=False)
             else:
                 dupes = dupes.filter(name=name)
@@ -68,6 +68,7 @@ def crews(request, *args, **kwargs):
             }, status=400, safe=False)
         found.name = name
         found.deleted = False
+        found.save()
         return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'POST':

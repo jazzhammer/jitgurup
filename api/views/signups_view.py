@@ -1,10 +1,11 @@
+from django.contrib.auth.models import User
 from django.db.models import QuerySet
 from django.forms import model_to_dict
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 
 from api.models.crew import Crew
-from api.models.meetup_role import MeetupRole
+from api.models.meetup_role import MeetupRole, GURU
 from api.models.person import Person
 from api.models.signup import Signup
 from api.models.meetup import Meetup
@@ -37,6 +38,15 @@ def signups(request, *args, **kwargs):
             return JsonResponse({
                 "error": f"signup not found for delete {id=}",
             }, status=404, safe=False)
+        meetup_role = None
+        try:
+            meetup_role = MeetupRole.objects.get(pk=found.meetup_role_id)
+        except Exception as meetup_role_e:
+            pass
+        if meetup_role:
+            if meetup_role.name == GURU:
+                return JsonResponse({"message": f"unable to delete signup for role: GURU"}, status=400, safe=False)
+
         found.deleted = True
         found.save()
         if erase:
@@ -130,20 +140,59 @@ def signups(request, *args, **kwargs):
         person_id = request.GET.get('person_id')
         meetup_id = request.GET.get('meetup_id')
         created_by_id = request.GET.get('created_by_id')
-
+        meetup_role_id = request.GET.get('meetup_role_id')
+        crew_id = request.GET.get('crew_id')
         founds = Signup.objects.all()
         filtered = False
-        if person_id:
-            filtered = True
-            founds = Signup.objects.filter(person_id=person_id)
+        query = f"""
+                select
+                    api_signup.*
+                from
+                    api_crew
+                ,   api_signup
+                where 1 = 1 
+                and api_signup.crew_id = api_crew.id            
+            """
+        raw = False
+        if meetup_role_id:
+            raw = True
+            query = f"{query}\nand api_signup.meetup_role_id = {meetup_role_id}"
+        if crew_id:
+            raw = True
+            query = f"{query}\nand api_signup.crew_id = {crew_id}"
         if meetup_id:
-            filtered = True
-            founds = Signup.objects.filter(meetup_id=meetup_id)
+            raw = True
+            query = f"{query}\nand api_crew.meetup_id = {meetup_id}"
+        if person_id:
+            raw = True
+            query = f"{query}\nand api_signup.person_id = {person_id}"
         if created_by_id:
-            filtered = True
-            founds = Signup.objects.filter(created_by_id=created_by_id)
+            raw = True
+            query = f"{query}\nand api_signup.created_by_id = {created_by_id}"
 
-        if not filtered:
+        if raw:
+            founds = Signup.objects.raw(query)
+        else:
             founds = Signup.objects.all()[:10]
+        dicts = build_dicts([model_to_dict(instance) for instance in founds])
+        return JsonResponse(dicts, status=200, safe=False)
 
-        return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
+def build_dicts(dicts):
+    for dict in dicts:
+        if dict.get('meetup_role'):
+            dict['meetup_role_id'] = dict['meetup_role']
+            meetup_role = MeetupRole.objects.get(pk=dict['meetup_role_id'])
+            dict['meetup_role'] = model_to_dict(meetup_role)
+        if dict.get('person'):
+            dict['person_id'] = dict['person']
+            person = Person.objects.get(pk=dict['person_id'])
+            dict['person'] = model_to_dict(person)
+        if dict.get('crew'):
+            dict['crew_id'] = dict['crew']
+            crew = Crew.objects.get(pk=dict['crew_id'])
+            dict['crew'] = model_to_dict(crew)
+        if dict.get('create_by'):
+            dict['created_by_id'] = dict['created_by']
+            user = User.objects.get(pk=dict['created_by_id'])
+            dict['created_by'] = model_to_dict(user)
+    return dicts

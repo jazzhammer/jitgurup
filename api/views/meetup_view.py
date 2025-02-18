@@ -333,5 +333,8 @@ def build_dicts(dicts):
                 dict['crew'] = model_to_dict(Crew.objects.get(pk=dict['crew_id']))
             except Exception as crew_e:
                 pass
-
+        else:
+            crews = Crew.objects.filter(meetup_id=dict.get('id'))
+            if len(crews) > 0:
+                dict['crew'] = model_to_dict(crews[0])
     return dicts
