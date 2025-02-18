@@ -105,11 +105,17 @@ def signups(request, *args, **kwargs):
     if request.method == 'POST':
         person_id: int = request.data.get('person_id')
         meetup_role_id: int = request.data.get('meetup_role_id')
+        meetup_role_name: str = request.data.get('meetup_role_name')
         crew_id: int = request.data.get('crew_id')
         created_by_id: int = request.data.get('created_by_id')
 
         try:
-            meetup_role = MeetupRole.objects.get(pk=meetup_role_id)
+            if meetup_role_id:
+                meetup_role = MeetupRole.objects.get(pk=meetup_role_id)
+            else:
+                meetup_role = MeetupRole.objects.get(name=meetup_role_name)
+            if not meetup_role:
+                raise Exception(f"required meetup_role name or id, found: {meetup_role_id=}, {meetup_role_name=}")
             person = Person.objects.get(pk=person_id)
             crew = Crew.objects.get(pk=crew_id)
         except Exception as save_e:
@@ -133,7 +139,9 @@ def signups(request, *args, **kwargs):
             crew=crew,
             created_by_id=created_by_id
         )
-        return JsonResponse(model_to_dict(created), status=201, safe=False)
+        dict = build_dict(model_to_dict(created))
+
+        return JsonResponse(dict, status=201, safe=False)
 
 
     if request.method == 'GET':
@@ -179,20 +187,24 @@ def signups(request, *args, **kwargs):
 
 def build_dicts(dicts):
     for dict in dicts:
-        if dict.get('meetup_role'):
-            dict['meetup_role_id'] = dict['meetup_role']
-            meetup_role = MeetupRole.objects.get(pk=dict['meetup_role_id'])
-            dict['meetup_role'] = model_to_dict(meetup_role)
-        if dict.get('person'):
-            dict['person_id'] = dict['person']
-            person = Person.objects.get(pk=dict['person_id'])
-            dict['person'] = model_to_dict(person)
-        if dict.get('crew'):
-            dict['crew_id'] = dict['crew']
-            crew = Crew.objects.get(pk=dict['crew_id'])
-            dict['crew'] = model_to_dict(crew)
-        if dict.get('create_by'):
-            dict['created_by_id'] = dict['created_by']
-            user = User.objects.get(pk=dict['created_by_id'])
-            dict['created_by'] = model_to_dict(user)
+        dict = build_dict(dict)
     return dicts
+
+def build_dict(next: dict):
+    if next.get('meetup_role'):
+        next['meetup_role_id'] = next['meetup_role']
+        meetup_role = MeetupRole.objects.get(pk=next['meetup_role_id'])
+        next['meetup_role'] = model_to_dict(meetup_role)
+    if next.get('person'):
+        next['person_id'] = next['person']
+        person = Person.objects.get(pk=next['person_id'])
+        next['person'] = model_to_dict(person)
+    if next.get('crew'):
+        next['crew_id'] = next['crew']
+        crew = Crew.objects.get(pk=next['crew_id'])
+        next['crew'] = model_to_dict(crew)
+    if next.get('create_by'):
+        next['created_by_id'] = next['created_by']
+        user = User.objects.get(pk=next['created_by_id'])
+        next['created_by'] = model_to_dict(user)
+    return next
