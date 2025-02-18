@@ -150,6 +150,7 @@ def signups(request, *args, **kwargs):
         created_by_id = request.GET.get('created_by_id')
         meetup_role_id = request.GET.get('meetup_role_id')
         crew_id = request.GET.get('crew_id')
+        deleted = request.GET.get('deleted')
         founds = Signup.objects.all()
         filtered = False
         query = f"""
@@ -177,7 +178,10 @@ def signups(request, *args, **kwargs):
         if created_by_id:
             raw = True
             query = f"{query}\nand api_signup.created_by_id = {created_by_id}"
-
+        if deleted is not None:
+            query = f"{query}\nand api_signup.deleted = {deleted}"
+        else:
+            query = f"{query}\nand api_signup.deleted = false"
         if raw:
             founds = Signup.objects.raw(query)
         else:
