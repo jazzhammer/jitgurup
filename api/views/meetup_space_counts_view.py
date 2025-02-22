@@ -72,20 +72,20 @@ def meetup_space_counts(request, *args, **kwargs):
         return JsonResponse(model_to_dict(found), status=200, safe=False)
 
     if request.method == 'POST':
-        max_persons: str = request.data.get('max_persons')
-        count: str = request.data.get('count')
-        meetup_calculation_id: str = request.data.get('meetup_calculation_id')
-        dupes: QuerySet = MeetupSpaceCount.objects.all()
-        if max_persons:
-            if len(max_persons.strip()) <= 0:
-                return JsonResponse({
-                    "error": f"require max_persons",
-                }, status=400, safe=False)
-            else:
-                dupes = dupes.filter(max_persons__iexact=max_persons.strip())
-        else:
+        max_persons: int = request.data.get('max_persons')
+        count: int = request.data.get('count')
+        meetup_calculation_id: int = request.data.get('meetup_calculation_id')
+        dupes: QuerySet = MeetupSpaceCount.objects.filter(meetup_calculation_id=meetup_calculation_id, max_persons=max_persons)
+        if len(dupes) > 0:
+            found = dupes[0];
+            found.max_persons = max_persons
+            found.count = count
+            found.save()
+            return JsonResponse(build(model_to_dict(found)), status=201, safe=False)
+
+        if not max_persons or not count:
             return JsonResponse({
-                "error": f"meetup_space_count requires max_persons, found {max_persons=}",
+                "error": f"require max_persons, count for meetup_space_count, found {max_persons=}, {count=}",
             }, status=400, safe=False)
 
         if meetup_calculation_id:
@@ -98,16 +98,12 @@ def meetup_space_counts(request, *args, **kwargs):
             dupes = dupes.filter(meetup_calculation_id=meetup_calculation_id)
         else:
             return JsonResponse({
-                "error": f"meetup_space_count requires max_persons, found {max_persons=}",
+                "error": f"meetup_space_count requires meetup_calculation_id, found {meetup_calculation_id=}",
             }, status=400, safe=False)
 
-        if dupes and dupes.count() > 0:
-            for dupe in dupes:
-                if dupe.deleted:
-                    dupe.deleted = False
-                    dupe.save()
-                    return JsonResponse(build(model_to_dict(dupe)), status=201, safe=False)
-        created = MeetupSpaceCount.objects.create(max_persons=max_persons, meetup_calculation=meetup_calculation, count=count)
+        created = MeetupSpaceCount.objects.create(
+            max_persons=max_persons, meetup_calculation=meetup_calculation, count=count
+        )
         return JsonResponse(build(model_to_dict(created)), status=201, safe=False)
 
     if request.method == 'GET':
