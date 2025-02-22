@@ -3,9 +3,11 @@ from django.forms import model_to_dict
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 
-
+from api.models.facility import Facility
 from api.models.meetup_calculation import MeetupCalculation
 from api.models.org import Org
+from api.models.village import Village
+
 
 @api_view(['POST', 'GET', 'PUT', 'DELETE'])
 def meetup_calculations(request, *args, **kwargs):
@@ -36,6 +38,8 @@ def meetup_calculations(request, *args, **kwargs):
         max_pupil_meetups_per_day = request.data.get("max_pupil_meetups_per_day")
         minimum_pupil_meetups_per_day = request.data.get("minimum_pupil_meetups_per_day")
         org_id: int = request.data.get('org_id')
+        facility_id: int = request.data.get('facility_id')
+        village_id: int = request.data.get('village_id')
         found = None
         if id:
             try:
@@ -52,6 +56,22 @@ def meetup_calculations(request, *args, **kwargs):
                     "error": f"require valid org_id to update org_id, found {org_id=}",
                 }, status=400, safe=False)
             found.org = org
+        if facility_id:
+            try:
+                facility = Facility.objects.get(pk=facility_id)
+            except:
+                return JsonResponse({
+                    "error": f"require valid facility_id to update facility_id, found {facility_id=}",
+                }, status=400, safe=False)
+            found.facility = facility
+        if village_id:
+            try:
+                village = Village.objects.get(pk=village_id)
+            except:
+                return JsonResponse({
+                    "error": f"require valid village_id to update village_id, found {village_id=}",
+                }, status=400, safe=False)
+            found.village = village
         if pupil_count:
             found.pupil_count = pupil_count
         if guru_count:
@@ -83,6 +103,8 @@ def meetup_calculations(request, *args, **kwargs):
         max_pupil_meetups_per_day = request.data.get("max_pupil_meetups_per_day")
         minimum_pupil_meetups_per_day = request.data.get("minimum_pupil_meetups_per_day")
         org_id = request.data.get("org_id")
+        facility_id = request.data.get("facility_id")
+        village_id = request.data.get("village_id")
 
         created = MeetupCalculation.objects.create()
 
@@ -92,6 +114,20 @@ def meetup_calculations(request, *args, **kwargs):
                 created.org = org
             except Exception as org_e:
                 return JsonResponse({"message": f"require valid org if org specified, found {org_id=}"}, status=400, safe=False)
+
+        if facility_id:
+            try:
+                facility = Facility.objects.get(pk=facility_id)
+                created.facility = facility
+            except Exception as facility_e:
+                return JsonResponse({"message": f"require valid facility if facility specified, found {facility_id=}"}, status=400, safe=False)
+
+        if village_id:
+            try:
+                village = Village.objects.get(pk=village_id)
+                created.village = village
+            except Exception as village_e:
+                return JsonResponse({"message": f"require valid village if village specified, found {village_id=}"}, status=400, safe=False)
 
         if pupil_count is not None:
             created.pupil_count = pupil_count
@@ -124,21 +160,37 @@ def meetup_calculations(request, *args, **kwargs):
                     'error:': f'no meetup_calculation found for {id=}'
                 }, status=404, safe=False)
         org_id = request.GET.get('org_id')
+        facility_id = request.GET.get('facility_id')
+        village_id = request.GET.get('village_id')
         founds = MeetupCalculation.objects.all()
         filtered = False
         if org_id:
             filtered = True
             founds = founds.filter(org_id=org_id)
+        if facility_id:
+            filtered = True
+            founds = founds.filter(facility_id=facility_id)
+        if village_id:
+            filtered = True
+            founds = founds.filter(village_id=village_id)
         if not filtered:
             founds = MeetupCalculation.objects.all()[:10]
         return JsonResponse([build(model_to_dict(instance)) for instance in founds], status=200, safe=False)
 
 def build(meetup_calculation_dict: dict):
     org_id = meetup_calculation_dict.get('org')
+    facility_id = meetup_calculation_dict.get('facility')
+    village_id = meetup_calculation_dict.get('village')
     meetup_calculation_dict['org_id'] = org_id
+    meetup_calculation_dict['facility_id'] = facility_id
+    meetup_calculation_dict['village_id'] = village_id
     try:
         org = Org.objects.get(pk=org_id)
+        facility = Facility.objects.get(pk=facility_id)
+        village = Village.objects.get(pk=village_id)
         meetup_calculation_dict['org'] = model_to_dict(org)
+        meetup_calculation_dict['facility'] = model_to_dict(facility)
+        meetup_calculation_dict['village'] = model_to_dict(village)
     except Exception as org_e:
         pass
     return meetup_calculation_dict

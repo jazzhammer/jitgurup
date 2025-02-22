@@ -1,7 +1,10 @@
 from django.db import models
 from django.db.models import DO_NOTHING
 
+from api.models.facility import Facility
 from api.models.org import Org
+from api.models.village import Village
+
 
 class MeetupCalculation(models.Model):
     pupil_count = models.IntegerField(default=0)
@@ -13,7 +16,5 @@ class MeetupCalculation(models.Model):
     max_pupil_meetups_per_day = models.IntegerField(default=0)
     minimum_pupil_meetups_per_day = models.IntegerField(default=0)
     org = models.ForeignKey(Org, null=True, on_delete=DO_NOTHING)
-    # class Meta:
-    #     indexes = [
-    #         models.Index(fields=['name', 'org_id', 'deleted'], name='facility_idx'),
-    #     ]
+    facility = models.ForeignKey(Facility, null=True, on_delete=DO_NOTHING)
+    village = models.ForeignKey(Village, null=True, on_delete=DO_NOTHING)
