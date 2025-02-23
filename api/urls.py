@@ -5,7 +5,7 @@ from .views import user_view, user_preferences_view, orgs_view, security_permiss
     meetup_templates_view, tools_view, focuss_view, subjects_view, topics_view, prereq_set_view, prereq_detail_view, \
     roles_view, crew_templates_view, template_roles_view, crews_view, signups_view, template_topics_view, \
     topic_resources_view, meetup_roles_view, meetup_view, village_view, learning_modalitys_view, \
-    preferred_modalitys_view, user_session_view, meetup_calculations_view, meetup_space_counts_view
+    preferred_modalitys_view, user_session_view, meetup_calculations_view, meetup_space_counts_view, testimonys_view
 
 urlpatterns = [
     path('crews', crews_view.crews),
@@ -37,6 +37,7 @@ urlpatterns = [
     path('subjects', subjects_view.subjects),
     path('template_roles', template_roles_view.template_roles),
     path('template_topics', template_topics_view.template_topics),
+    path('testimonys', testimonys_view.testimonys),
     path('tools', tools_view.tools),
     path('topics', topics_view.topics),
     path('topic_resources', topic_resources_view.topic_resources),
