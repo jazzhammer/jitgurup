@@ -7,6 +7,8 @@ from rest_framework.parsers import JSONParser
 from api.models.focus import Focus
 from django.http import JsonResponse, HttpRequest
 
+from api.models.topic import Topic
+
 
 @api_view(['POST', 'GET', 'DELETE', 'PUT'])
 def focuss(request: HttpRequest, *args, **kwargs):
@@ -54,6 +56,18 @@ def focuss(request: HttpRequest, *args, **kwargs):
                     return JsonResponse({
                         "error": f"require non blank name to update focus, found {name=}"
                     }, status=400, safe=False)
+
+            topic_id = request.data.get("topic_id")
+            if topic_id:
+                try:
+                    topic = Topic.objects.get(pk=topic_id)
+                    found.topic = topic
+                    found.save()
+                except Exception as topic_e:
+                    return JsonResponse({
+                        "error": f"require valid topic_id to update focus, found {topic_id=}, {topic_e=}"
+                    }, status=400, safe=False)
+
             return JsonResponse(model_to_dict(found), status=200)
 
     if request.method == 'POST':

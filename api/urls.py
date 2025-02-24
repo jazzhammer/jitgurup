@@ -5,14 +5,19 @@ from .views import user_view, user_preferences_view, orgs_view, security_permiss
     meetup_templates_view, tools_view, focuss_view, subjects_view, topics_view, prereq_set_view, prereq_detail_view, \
     roles_view, crew_templates_view, template_roles_view, crews_view, signups_view, template_topics_view, \
     topic_resources_view, meetup_roles_view, meetup_view, village_view, learning_modalitys_view, \
-    preferred_modalitys_view, user_session_view, meetup_calculations_view, meetup_space_counts_view, testimonys_view
+    preferred_modalitys_view, user_session_view, meetup_calculations_view, meetup_space_counts_view, testimonys_view, \
+    focal_artifacts_view, focal_artifact_types_view, frequent_answers_view, frequent_questions_view
 
 urlpatterns = [
     path('crews', crews_view.crews),
     path('crew_templates', crew_templates_view.crew_templates),
     path('facilitys', facilitys_view.facilitys),
     path('focuss', focuss_view.focuss),
+    path('focal_artifacts', focal_artifacts_view.focal_artifacts),
+    path('focal_artifact_types', focal_artifact_types_view.focal_artifact_types),
     path('facility/<int:facility_id>', facilitys_view.facility),
+    path('frequent_answers', frequent_answers_view.frequent_answers),
+    path('frequent_questions', frequent_questions_view.frequent_questions),
     path('learning_modalitys', learning_modalitys_view.learning_modalitys),
     path('meetup_calculations', meetup_calculations_view.meetup_calculations),
     path('meetup_roles', meetup_roles_view.meetup_roles),

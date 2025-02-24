@@ -33,9 +33,32 @@ class ApiConfig(AppConfig):
         self.confirm_preferred_modalitys()
         self.confirn_default_groups()
         self.confirm_default_meetup_roles()
+        # self.confirm_default_focal_artifact_types()
         # self.confirmDefaultPermissions()
         # self.confirmDefaultGroupPermissions()
 
+
+    def confirm_default_focal_artifact_types(self):
+        self.confirm_default_focal_artifact_type("project", "project")
+        self.confirm_default_focal_artifact_type("presentation", "presentation")
+        self.confirm_default_focal_artifact_type("portfolio", "portfolio")
+        self.confirm_default_focal_artifact_type("observation", "observation")
+        self.confirm_default_focal_artifact_type("demonstration", "demonstration")
+        self.confirm_default_focal_artifact_type("real-world application task", "real-world application task")
+        self.confirm_default_focal_artifact_type("essay", "essay")
+        self.confirm_default_focal_artifact_type("in-depth quiz", "in-depth quiz")
+        self.confirm_default_focal_artifact_type("oral questioning", "oral questioning")
+        self.confirm_default_focal_artifact_type("peer review", "peer review")
+        self.confirm_default_focal_artifact_type("self-assessment", "self-assessment")
+        self.confirm_default_focal_artifact_type("formative assessment", "formative assessment")
+
+    def confirm_default_focal_artifact_type(self, name: str, description: str):
+        from api.models.focal_artifact_type import FocalArtifactType
+        already = FocalArtifactType.objects.filter(name__iexact=name)
+        if len(already) == 0:
+            return FocalArtifactType.objects.create(name=name, description=description)
+        else:
+            return already[0]
 
     def confirm_default_meetup_role(self, name: str):
         from api.models.meetup_role import MeetupRole
@@ -656,7 +679,7 @@ class ApiConfig(AppConfig):
         self.confirm_default_topic(subject, 'Diagnosis and management of oral mucosal diseases')
         self.confirm_default_topic(subject, 'Sterilization procedures and protocols')
         self.confirm_default_topic(subject, 'Building rapport with patients, informed consent, and ethical practice')
- 
+
 
         subject = self.confirm_default_subject('Digital Audio Arts')
         self.confirm_default_topic(subject, 'Music recording')
