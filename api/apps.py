@@ -33,10 +33,16 @@ class ApiConfig(AppConfig):
         self.confirm_preferred_modalitys()
         self.confirn_default_groups()
         self.confirm_default_meetup_roles()
+        self.confirm_default_frequent_questions()
         # self.confirm_default_focal_artifact_types()
         # self.confirmDefaultPermissions()
         # self.confirmDefaultGroupPermissions()
 
+    def confirm_default_frequent_questions(self):
+        pass
+
+    def confirm_default_frequent_question_answer(self, question, answer):
+        pass
 
     def confirm_default_focal_artifact_types(self):
         self.confirm_default_focal_artifact_type("project", "project")
