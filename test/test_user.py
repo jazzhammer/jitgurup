@@ -32,6 +32,13 @@ def get_default_user():
     except Exception as get_e:
         return None
 
+def get_default_user_for_username(username: str):
+    response = requests.get(url_test, params={'username': username})
+    try:
+        return json.loads(response.content.decode('utf8'))
+    except Exception as get_e:
+        return None
+
 def create_default_user():
     return create_default_user_for_names(TEST_USER_NAME, TEST_USER_LAST_NAME, TEST_USER_USERNAME)
 
@@ -50,7 +57,6 @@ def create_default_user_for_names(first_name: str, last_name: str, username: str
         assert created.get('username').lower() == username.lower()
         assert not created.get('deleted')
         return created
-
 
 def erase_user(username: str):
     response = requests.get(url_test, params={

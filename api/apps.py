@@ -3,7 +3,7 @@ import os
 from django.apps import AppConfig
 from django.forms import model_to_dict
 from dotenv import load_dotenv
-
+from resource.fqa.fqas import fqas
 
 
 load_dotenv()
@@ -34,15 +34,19 @@ class ApiConfig(AppConfig):
         self.confirn_default_groups()
         self.confirm_default_meetup_roles()
         self.confirm_default_frequent_questions()
-        # self.confirm_default_focal_artifact_types()
+        self.confirm_default_focal_artifact_types()
         # self.confirmDefaultPermissions()
         # self.confirmDefaultGroupPermissions()
 
     def confirm_default_frequent_questions(self):
-        pass
+        from api.models.frequent_question import FrequentQuestion
+        from api.models.frequent_answer import FrequentAnswer
+        for fqa in fqas:
+            found_q = FrequentQuestion.objects.filter(content=fqa.get('content'))
+            if len(found_q) == 0:
+                fq = FrequentQuestion.objects.create(content=fqa.get('q'))
+                fa = FrequentAnswer.objects.create(content=fqa.get('a'), frequent_question=fq)
 
-    def confirm_default_frequent_question_answer(self, question, answer):
-        pass
 
     def confirm_default_focal_artifact_types(self):
         self.confirm_default_focal_artifact_type("project", "project")
@@ -1712,7 +1716,7 @@ class ApiConfig(AppConfig):
                     pass
                     # print(f"{f"":32}: ok: {found.id}")
             except Exception as not_found_e:
-                print(f"{f"confirming user":32}: not found, creating...")
+                print(f"{f"confirming user":32}: not found, creating ({username=})...")
                 created = self.create_common_user(username, 'admin@jitguru.com', password)
 
             if created:

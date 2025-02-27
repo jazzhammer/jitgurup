@@ -128,7 +128,9 @@ def create_default_meetup_for_name(name: str):
     assert created.get('org') == org.get('id')
     assert created.get('facility') == facility.get('id')
     assert created.get('meetup_spot') == meetup_spot.get('id')
-    assert created.get('crew') == crew.get('id')
+    # crew is not a property of meetup
+    # meetup is a property of crew
+    # assert created.get('crew') == crew.get('id')
     assert not created.get('deleted')
     return (
         created,

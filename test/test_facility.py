@@ -65,7 +65,7 @@ def create_default_facility_for_name_description(name: str, description: str):
     if created:
         assert created.get('name') == name
         assert created.get('description') == description
-        assert created.get('org') == org.get('id')
+        assert created.get('org').get('id') == org.get('id')
         assert not created.get('deleted')
         return created, org
 

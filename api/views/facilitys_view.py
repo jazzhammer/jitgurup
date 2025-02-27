@@ -150,13 +150,12 @@ def facilitys(request, *args, **kwargs):
             founds = Facility.objects.all()[:10]
         return JsonResponse([build(model_to_dict(instance)) for instance in founds], status=200, safe=False)
 
-def build(facility: Facility):
-    dict = model_to_dict(facility)
-    org_id = dict.get('org')
-    dict['org_id'] = org_id
+def build(facility: dict):
+    org_id = facility.get('org')
+    facility['org_id'] = org_id
     try:
         org = Org.objects.get(pk=org_id)
-        dict['org'] = model_to_dict(org)
+        facility['org'] = model_to_dict(org)
     except Exception as org_e:
         pass
-    return dict
+    return facility

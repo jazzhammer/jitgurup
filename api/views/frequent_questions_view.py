@@ -1,3 +1,5 @@
+from random import random, randrange
+
 from django.db.models import QuerySet
 from django.forms import model_to_dict
 from django.http import JsonResponse
@@ -46,20 +48,32 @@ def frequent_questions(request, *args, **kwargs):
 
     if request.method == 'POST':
         content: str = request.data.get('content')
-        created = FrequentQuestion.objects.create(content=content)
-        return JsonResponse(build(model_to_dict(created)), status=201, safe=False)
+        founds = FrequentQuestion.objects.filter(content=content)
+        if len(content) > 0 and len(founds) == 0:
+            created = FrequentQuestion.objects.create(content=content)
+            return JsonResponse(build(model_to_dict(created)), status=201, safe=False)
+        else:
+            return JsonResponse({"message": f"require content for new question"}, status=400, safe=False)
 
     if request.method == 'GET':
         id = request.GET.get('id')
         content = request.GET.get("content")
         if id:
-            try:
-                found = FrequentQuestion.objects.get(pk=id)
+            id = int(id)
+            if id < 0:
+                count = FrequentQuestion.objects.all().count()
+                found = FrequentQuestion.objects.all()[randrange(0, count-1)]
+                while len(found.content) == 0:
+                    found = FrequentQuestion.objects.all()[randrange(0, count - 1)]
                 return JsonResponse([build(model_to_dict(found))], status=200, safe=False)
-            except:
-                return JsonResponse({
-                    'error:': f'no frequent_question found for {id=}'
-                }, status=404, safe=False)
+            else:
+                try:
+                    found = FrequentQuestion.objects.get(pk=id)
+                    return JsonResponse([build(model_to_dict(found))], status=200, safe=False)
+                except:
+                    return JsonResponse({
+                        'error:': f'no frequent_question found for {id=}'
+                    }, status=404, safe=False)
         founds = FrequentQuestion.objects.filter(content__icontains=content)
         return JsonResponse([build(model_to_dict(instance)) for instance in founds], status=200, safe=False)
 

@@ -13,7 +13,8 @@ from test_facility import erase_default_facility
 
 from test_meetup_spot import erase_default_meetup_spot
 from test_person import create_default_person, create_default_person_for_names, erase_default_person
-from test_user import create_default_user, erase_default_user, get_default_user, create_default_user_for_names
+from test_user import create_default_user, erase_default_user, get_default_user, create_default_user_for_names, \
+    get_default_user_for_username
 from test_crew import create_default_crew, create_default_crew_for_name, erase_default_crew
 from test_meetup_role import create_default_meetup_role, create_default_meetup_role_for_name_description, erase_default_meetup_role
 from test_meetup import create_default_meetup, erase_default_meetup
@@ -97,6 +98,7 @@ def test_signup():
     erase_default_spot_type(spot_type2m.get('id'))
 
 
+
 def update_default_signup(updatable):
     next_meetup_role = create_default_meetup_role_for_name_description('another name', 'another description')
     next_person = create_default_person_for_names('another last', 'another first')
@@ -131,12 +133,25 @@ def erase_signups_for_default_user():
             for deletable in deletables:
                 erase_signup(deletable.get('id'))
 
-def create_default_signup():
+def create_default_signup_for_person_names(first, last):
+    person = create_default_person_for_names(first, last)
+    return create_default_signup(person=person)
+
+def create_default_signup(*args, **kwargs):
     erase_signups_for_default_user()
-    person = create_default_person()
+    person = kwargs.get('person')
+    if person is None:
+        person = create_default_person()
     crew = create_default_crew()
     meetup_role = create_default_meetup_role()
-    created_by = create_default_user_for_names('test_signup', 'test_signup_first', 'signup_user')
+    created_by = get_default_user_for_username('signup_user')
+    if isinstance(created_by, list):
+        if len(created_by) > 0:
+            created_by = created_by[0]
+        else:
+            created_by = None
+    if not created_by:
+        created_by = create_default_user_for_names('test_signup', 'test_signup_first', 'signup_user')
     (
         meetup,
         meetup_templatem,
@@ -169,9 +184,9 @@ def create_default_signup():
     created = json.loads(response.content.decode('utf-8'))
 
     if created:
-        assert created.get('person') == person.get('id')
-        assert created.get('crew') == crew.get('id')
-        assert created.get('meetup_role') == meetup_role.get('id')
+        assert created.get('person').get('id') == person.get('id')
+        assert created.get('crew').get('id') == crew.get('id')
+        assert created.get('meetup_role').get('id') == meetup_role.get('id')
         assert not created.get('deleted')
 
     return (

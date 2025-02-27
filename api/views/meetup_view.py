@@ -68,13 +68,15 @@ def meetup(request, **kwargs):
             start_at=start_at,
             start_at_unix=start_at_unix,
             duration=duration,
-            name=name,
-            year=start_at.year,
-            month=start_at.month, # jan = 1
-            dom=start_at.day,
-            hour=start_at.hour,
-            minute=start_at.minute
+            name=name
         )
+        if start_at:
+            created.year = start_at.year,
+            created.month = start_at.month,  # jan = 1
+            created.dom = start_at.day,
+            created.hour = start_at.hour,
+            created.minute = start_at.minute
+            created.save()
 
         if meetup_template_id:
             created.meetup_template_id = meetup_template_id
@@ -100,9 +102,11 @@ def meetup(request, **kwargs):
 
         if name:
             created.name = name
-        created.crew = crew
+        # crew is not a property of meetup
+        # meetup is a property of crew
+        # created.crew = crew
         # ensure we have a signup for the person if there is a person
-        created.save()
+        # created.save()
         if person:
             created_by = User.objects.get(pk=user_id)
             meetup_role = None
@@ -222,10 +226,12 @@ def meetup(request, **kwargs):
             filtered = True
             founds = founds.filter(meetup_spot_id=meetup_spot_id)
 
-        crew_id = request.GET.get('crew_id')
-        if crew_id:
-            filtered = True
-            founds = founds.filter(crew_id=crew_id)
+        # crew is not a property of meetup.
+        # meetup is a property of crew
+        # crew_id = request.GET.get('crew_id')
+        # if crew_id:
+        #     filtered = True
+        #     founds = founds.filter(crew_id=crew_id)
 
         if filtered:
 

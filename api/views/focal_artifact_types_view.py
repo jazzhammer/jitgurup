@@ -5,7 +5,6 @@ from rest_framework.decorators import api_view
 
 
 from api.models.focal_artifact_type import FocalArtifactType
-from api.models.org import Org
 
 @api_view(['POST', 'GET', 'PUT', 'DELETE'])
 def focal_artifact_types(request, *args, **kwargs):
@@ -81,7 +80,7 @@ def focal_artifact_types(request, *args, **kwargs):
                     dupe.deleted = False
                     dupe.save()
                     return JsonResponse(build(model_to_dict(dupe)), status=201, safe=False)
-        created = FocalArtifactType.objects.create(name=name, org=org, description=description)
+        created = FocalArtifactType.objects.create(name=name, description=description)
         return JsonResponse(build(model_to_dict(created)), status=201, safe=False)
 
     if request.method == 'GET':
@@ -110,4 +109,4 @@ def build(focal_artifact_type: FocalArtifactType):
         pass
     except Exception as e:
         pass
-    return dict
+    return focal_artifact_type
