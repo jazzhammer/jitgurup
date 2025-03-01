@@ -44,8 +44,14 @@ class ApiConfig(AppConfig):
         for fqa in fqas:
             found_q = FrequentQuestion.objects.filter(content=fqa.get('content'))
             if len(found_q) == 0:
-                fq = FrequentQuestion.objects.create(content=fqa.get('q'))
-                fa = FrequentAnswer.objects.create(content=fqa.get('a'), frequent_question=fq)
+                try:
+                    fq = FrequentQuestion.objects.create(content=fqa.get('q'))
+                    fa = FrequentAnswer.objects.create(content=fqa.get('a'), frequent_question=fq)
+                except Exception as e:
+                    if len(fqa.get('q').strip()) > 0:
+                        print(f"dupe for {fqa.get('q')}")
+                    else:
+                        pass
 
 
     def confirm_default_focal_artifact_types(self):

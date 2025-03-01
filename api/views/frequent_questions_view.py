@@ -49,6 +49,8 @@ def frequent_questions(request, *args, **kwargs):
     if request.method == 'POST':
         content: str = request.data.get('content')
         founds = FrequentQuestion.objects.filter(content=content)
+        if content:
+            content = content.strip()
         if len(content) > 0 and len(founds) == 0:
             created = FrequentQuestion.objects.create(content=content)
             return JsonResponse(build(model_to_dict(created)), status=201, safe=False)
@@ -58,7 +60,9 @@ def frequent_questions(request, *args, **kwargs):
     if request.method == 'GET':
         id = request.GET.get('id')
         content = request.GET.get("content")
+        filtered = False
         if id:
+            filtered = True
             id = int(id)
             if id < 0:
                 count = FrequentQuestion.objects.all().count()
@@ -74,8 +78,16 @@ def frequent_questions(request, *args, **kwargs):
                     return JsonResponse({
                         'error:': f'no frequent_question found for {id=}'
                     }, status=404, safe=False)
-        founds = FrequentQuestion.objects.filter(content__icontains=content)
-        return JsonResponse([build(model_to_dict(instance)) for instance in founds], status=200, safe=False)
+        if content:
+            filtered = True
+            content = content.strip()
+            if len(content) > 0:
+                founds = FrequentQuestion.objects.filter(content__icontains=content, deleted=False).order_by('content')
+        if filtered:
+            return JsonResponse([build(model_to_dict(instance)) for instance in founds], status=200, safe=False)
+        else:
+            founds = FrequentQuestion.objects.filter(deleted=False).order_by('content')[:10]
+            return JsonResponse([build(model_to_dict(instance)) for instance in founds], status=200, safe=False)
 
 def build(frequent_question: FrequentQuestion):
     # dict = model_to_dict(frequent_question)
