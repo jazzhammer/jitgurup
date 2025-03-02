@@ -6,7 +6,8 @@ from .views import user_view, user_preferences_view, orgs_view, security_permiss
     roles_view, crew_templates_view, template_roles_view, crews_view, signups_view, template_topics_view, \
     topic_resources_view, meetup_roles_view, meetup_view, village_view, learning_modalitys_view, \
     preferred_modalitys_view, user_session_view, meetup_calculations_view, meetup_space_counts_view, testimonys_view, \
-    focal_artifacts_view, focal_artifact_types_view, frequent_answers_view, frequent_questions_view, focal_results_view
+    focal_artifacts_view, focal_artifact_types_view, frequent_answers_view, frequent_questions_view, focal_results_view, \
+    org_joins_view
 
 urlpatterns = [
     path('crews', crews_view.crews),
@@ -28,7 +29,7 @@ urlpatterns = [
     path('meetup_templates', meetup_templates_view.meetup_templates),
     path('meetups', meetup_view.meetup),
     path('orgs', orgs_view.orgs),
-    path('orgs/<int:org_id>', orgs_view.org),
+    path('org_joins', org_joins_view.org_joins),
     path('orgs/person', org_persons_view.org_persons),
     path('orgs/person/<int:org_id>', org_persons_view.org_persons),
     path('persons', persons_view.persons),
@@ -60,9 +61,7 @@ urlpatterns = [
     path('tests/reset', user_view.reset_tests),
     path('tests/reset/facility', facilitys_view.reset_tests),
 
-    path('tests/reset/org', orgs_view.reset_tests),
     path('tests/reset/security', user_view.reset_tests_security),
-    # path('tests/reset/users/preference', user_preferences_view.reset_tests),
     path("seed/default_users", user_view.seed_default_users),
     path("seed/default_orgs", user_view.seed_default_orgs),
     path("seed/default_user_orgs", user_view.seed_default_user_orgs),

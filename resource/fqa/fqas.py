@@ -72,16 +72,20 @@ fqas = [
         "q": "can a pupil attend the same meetup with the same guru multiple times?",
         "a": """
         yes, there are a few reasons why a pupil might want to do this. here are a couple: 
+
         a. the pupil isn't confident about their knowledge or skills in the topic and wants to re-iterate to enforce their learning.
+
         b. the topic is of a nature that makes the content of the meetup unique each time, 
-        eg. it could be a  'current events in the mediterranean sea' topic.  
+        eg. it could be a 'current events in the mediterranean sea' topic.  
         """
     },
     {
         "q": "can a pupil attend the same meetup & topic with a different guru?",
         "a": """
         yes, and it is encouraged if a pupil's path to the topic's mastery requires the perspective and approach that 
-        a different guru would contribute.  an example could be the topic 'career prospects in indoor horticulture'.  
+        a different guru would contribute.  
+        
+        an example could be the topic 'career prospects in indoor horticulture'.  
         there could be a number of gurus hosting meetups for this topic.  the engineer would have an engineer's perspective, 
         which would likely differ from the horticulturalist's, and different still from the career councellor's.  
         """
@@ -270,12 +274,16 @@ fqas = [
     {
         "q": "does jitguru support streaming?",
         "a": """
-        yes. it also supports NOT streaming. 
-        
+        yes. it also supports NOT streaming.
+
         the conventional idea of streaming is the setting of students upon either a path towards the trades
         or to academics.  it's a strange dichotomy and is enforced quite rigidly in our schools. and even worse: 
-        a culture of competition exists between the two wher
-        
+        a culture of competition exists between the two in which each extreme denigrates the other, as if one 
+        was superior.  
+
+        jitguru enables a learning community to organize meetups, whose topics follow naturally the prerequisite meetup's topic,
+        regardless of what arbitrary stream-name some bureaucracy assigns to these meetups. 
+        in a way, each pupil's path to mastery is a stream, and jitguru supports every path, wherever it leads. 
         """
     },
     {
@@ -287,13 +295,13 @@ fqas = [
         "q": "what is wrong with streaming english?",
         "a": """
         'academic english'  vs  .... '<whatever other name for it> english'
-        
+
         our educational systems use the most ancient and maladaptive methods to create paths for students.   there was a time when there was a clear difference between "the least amount of english one needs to get by in the world" and "english you'll probably need if you want to do more than shovel-out culverts"
-        
+
         that era is long gone, but the people running our educational systems haven't learned how to create a spectrum content that a student can use to compose a learning path through english that aligns with their interests and aspirations.  maybe these people just aren't smart enough to do it. maybe they're too lazy. maybe both.  the current system is leaving a lot of human potential on the table for students that fall between these extremes.  
-        
+
         and this is just english.  our system does this with all the other subjects too. 
-        
+
         it's time to demand better for students, and more value for the tax money we spend on education.        
         """
     },
@@ -304,41 +312,115 @@ fqas = [
         """
     },
     {
+        "q": "how does one assess mastery if not with grades?",
+        "a": """
+        """
+    },
+    {
+        "q": "why do we use grades for student reporting?",
+        "a": """
+        https://www.youtube.com/watch?v=lfRALeA3mdU
+
+        i'm a parent of 2 boys that graduated from the same worthless education system that i had to endure.  i have been very clear throughout that i don't care about their grades. instead, i reminded them that: 
+
+        a. every day is a chance to prepare for tomorrow.  
+
+        which tomorrow are you preparing for?
+
+        b. every day, someone is going to tell you what they think of you. could be a teacher with a grade, or some other kid pointing at the wrong color of your sneakers, or some supervisor at your job.
+
+        who defines you?
+        """
+    },
+    {
         "q": "what the mandate of british columbia's curriculum?",
         "a": """
         British Columbia’s curriculum design enables a personalized, flexible and innovative approach at all levels of the education system.
         All areas of learning have been redesigned using this model.
+
+        if only this could be true.        
         """
     },
     {
         "q": "how does jitguru separate students into grades?",
         "a": """
+        it doesn't.
+
+        'grades' are another name for 'age-cohort'.  arbitrarily, schools segregate students into same-age groups, 
+        and they attempt to shoe-horn a set of topics for each subject into each grouping with the assumption that 
+        every student in the group is cognitively prepared for precisely that set of topics.
+
+        keep in mind that, for each grade and subject there is a sub population of students that should not be in the grade
+        because they're not ready:  they may not have mastered a prerequisite topic, they may not be sufficiently mature 
+        cognitively, they could be unprepared for any number of other reasons, but schools disregard this reality and insist
+        that they learn the designated material. 
+        
+        another subpopulation in each grade and subject are advanced and should be in a cohort that is mastering the "next garde's"
+        material.
+
+        there is of course the subpopulation that actually should be in the age cohort, not because of their age, but because,
+        incidentally, they happen to be in the right place cognitively, experientially, etc for the topics arbitrarily assigned
+        to the grade.
+
+        jitguru doesn't constrain any meetup with an age requirement. a meetup's guru may, at their discretion, do so.  
+        jitguru makes it very clear which meetups are prerequisites for others.  the result is a clear path for every pupil 
+        and subject, regardless of age.  knowledge doesn't care about the age of its learner. 
         """
     },
     {
         "q": "how does jitguru work with bodies like the ministry of education in bc?",
         "a": """
         the ministry of education in bc has a lot to say about their approach to eduction. for example:
-        
+
         'Although the learning standards are described within areas of learning, 
         there is no requirement for teachers to organize classrooms, schools or instruction in this manner.
         the Ministry of Education defines the “what” to teach but not the “how” to organize the time, space or methods to teach it.'
-        
+
         unfortunately, the choices schools make in implementing the "how" produce poor delivery of the "what".  eg. students
         are grouped in age cohorts, called 'grades'.  schools don't understand that age-cohorting doesn't correspond to individual 
         cognitive readiness for each subject area. ie. just because a student is 12 years old, we shouldn't assume that they're sufficiently mature, 
         cognitively, to learn about states of matter and energy transfer.  
-        
+
         the curriculum is supposedly designed to enable a personalized, flexible and innovative approach at all levels of the education system.  
         however, that's not what students experience.  there is no innovation evident in long lectures and standardized tests. 
         there is no evidence of personalization when the entire class must sit through the same lecture and perform the same pratical work 
         and write the same quiz.  there is no flexibility evident in the way students are prohibited from learning one subject 
-        at a slower pace than dictated grade-driven curriculum, and learning another subject at a faster pace than dictated 
-        their grade.
-        
+        at a slower pace than dictated by grade-driven curriculum, and learning another subject at a faster pace than dictated 
+        by their grade-level.
+
         so the answer is that a jitguru-enabled learning community works quite well with the ideals of a body like the ministry of education.
-        
+
         it does so by actually organizing the time, space and methods to teach the "what" of the curriculum.  
         """
+    },
+    {
+        "q": "how does jitguru student reporting compare with the education ministry's?",
+        "a": """
+        ```
+        When you were in school, learning likely involved being asked to memorize information and repeat it on a test, 
+        only to forget it soon after. 
+
+        We now know good learning is not just memorizing – it’s being able to use what we know in real-world settings. 
+        Universities, colleges, and employers now care more about how students think than how many facts they can memorize and recall.
+
+        This is why BC has changed what students are taught and is changing how they’re assessed. 
+        
+        The new curriculum teaches your child how to think, communicate, solve problems, and use their knowledge 
+        in ways that both matter in school and will matter in a rapidly changing future.
+        ```
+        """
+    },
+    {
+        "q": "how did we arrive at the current education system?",
+        "a": """
+        schooling is built on assumptions that have been proven wrong many times over many years.  
+        add to that education system policy makers that don't like being told they're wrong and who, 
+        even if they would be sensible enough to admit they're wrong, 
+        are too afraid of change to fix what is broken.
+
+        the result: the current education system
+        """
     }
+
+
 ]

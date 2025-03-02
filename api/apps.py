@@ -24,8 +24,10 @@ class ApiConfig(AppConfig):
              \\/|__|             \\/           \\/        /_____/
         """)
         print(f"------------------------------------------------------------")
-
+        #
         self.confirm_default_users()
+        self.confirm_jazz_user()
+        self.confirm_admin_user()
         self.confirm_default_subjects()
         self.confirm_default_orgs()
         self.confirm_user_orgs()
@@ -35,15 +37,78 @@ class ApiConfig(AppConfig):
         self.confirm_default_meetup_roles()
         self.confirm_default_frequent_questions()
         self.confirm_default_focal_artifact_types()
+        self.confirm_animals()
+
         # self.confirmDefaultPermissions()
         # self.confirmDefaultGroupPermissions()
+
+    def confirm_default_users(self):
+        print(f"confirm_default_users...")
+        from django.contrib.auth.models import User
+        password = os.getenv('DEFAULT_PASSWORD')
+        username = os.getenv('DEFAULT_USERNAME')
+
+        self.confirm_admin_user()
+        mcdude = self.confirm_default_user(username, password, "mcdude", "das_dudin")
+        guru_a = self.confirm_default_user("gurua", password, "guru_a", "alpha")
+        guru_b = self.confirm_default_user("gurub", password, "guru_b", "bravo")
+        guru_c = self.confirm_default_user("guruc", password, "guru_c", "charlie")
+
+        pupil_a = self.confirm_default_user("pupila", password, "pupil_a", "angus")
+        pupil_b = self.confirm_default_user("pupilb", password, "pupil_b", "beaner")
+        pupil_c = self.confirm_default_user("pupilc", password, "pupil_c", "chowder")
+
+    def confirm_jazz_user(self):
+        from django.contrib.auth.models import User
+
+        try:
+            found = User.objects.filter(username="jitguruadmin").first()
+            if found is None:
+                created = User.objects.create_user("jitguruadmin", "admin@jitguru.com", "ilovethejitguru")
+                if created is not None:
+                    print(f"created default user: {created.username}")
+                    created.is_superuser = True
+                    created.is_staff = True
+                    created.last_name = 'jitguru'
+                    created.first_name = 'admin'
+                    created.save()
+        except Exception as e:
+            print(f"unable to confirm default user: {e}")
+
+
+    def confirm_admin_user(self):
+        from django.contrib.auth.models import User
+
+        ADMIN_USERNAME = os.getenv('ADMIN_USERNAME')
+        ADMIN_FIRST_NAME = os.getenv('ADMIN_FIRST_NAME')
+        ADMIN_LAST_NAME = os.getenv('ADMIN_LAST_NAME')
+        ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')
+
+        try:
+            found = User.objects.filter(username=ADMIN_USERNAME).first()
+            if found is None:
+                created = User.objects.create_user(ADMIN_USERNAME, "tio.a@tacteonltd.com", ADMIN_PASSWORD)
+                if created is not None:
+                    print(f"created admin user: {created.username}")
+                    created.is_superuser = True
+                    created.is_staff = True
+                    created.last_name = ADMIN_LAST_NAME
+                    created.first_name = ADMIN_FIRST_NAME
+                    created.save()
+        except Exception as e:
+            print(f"unable to confirm admin user: {e}")
+
+
+    def confirm_animals(self):
+
+        pass
 
     def confirm_default_frequent_questions(self):
         from api.models.frequent_question import FrequentQuestion
         from api.models.frequent_answer import FrequentAnswer
         for fqa in fqas:
             found_q = FrequentQuestion.objects.filter(content=fqa.get('content'))
-            if len(found_q) == 0:
+            if len(fqa.get('a').strip()) > 0 and len(found_q) == 0:
                 try:
                     fq = FrequentQuestion.objects.create(content=fqa.get('q'))
                     fa = FrequentAnswer.objects.create(content=fqa.get('a'), frequent_question=fq)
@@ -1749,54 +1814,6 @@ class ApiConfig(AppConfig):
         except Exception as user_e:
             print(f"error confirming user: {username}: {user_e}")
 
-    def confirm_admin_user(self):
-        from django.contrib.auth.models import User
-
-        try:
-            found = User.objects.filter(username="jitguruadmin").first()
-            if found is None:
-                created = User.objects.create_user("jitguruadmin", "admin@jitguru.com", "ilovethejitguru")
-                if created is not None:
-                    print(f"created default user: {created.username}")
-                    created.is_superuser = True
-                    created.is_staff = True
-                    created.last_name = 'jitguru'
-                    created.first_name = 'admin'
-                    created.save()
-        except Exception as e:
-            print(f"unable to confirm default user: {e}")
-
-        try:
-            found = User.objects.filter(username="jitguruadmin").first()
-            if found is None:
-                created = User.objects.create_user("jitguruadmin", "admin@jitguru.com", "ilovethejitguru")
-                if created is not None:
-                    print(f"created default user: {created.username}")
-                    created.is_superuser = True
-                    created.is_staff = True
-                    created.last_name = 'jitguru'
-                    created.first_name = 'admin'
-                    created.save()
-        except Exception as e:
-            print(f"unable to confirm default user: {e}")
-
-
-    def confirm_default_users(self):
-        print(f"confirm_default_users...")
-        from django.contrib.auth.models import User
-        password = os.getenv('DEFAULT_PASSWORD')
-        username = os.getenv('DEFAULT_USERNAME')
-
-        self.confirm_admin_user()
-        mcdude = self.confirm_default_user(username, password, "mcdude", "das_dudin")
-        guru_a = self.confirm_default_user("gurua", password, "guru_a", "alpha")
-        guru_b = self.confirm_default_user("gurub", password, "guru_b", "bravo")
-        guru_c = self.confirm_default_user("guruc", password, "guru_c", "charlie")
-
-        pupil_a = self.confirm_default_user("pupila", password, "pupil_a", "angus")
-        pupil_b = self.confirm_default_user("pupilb", password, "pupil_b", "beaner")
-        pupil_c = self.confirm_default_user("pupilc", password, "pupil_c", "chowder")
-
 
     def confirm_default_org(self, name, description):
         print(f"confirm_default_org({name})...")
@@ -1860,35 +1877,37 @@ class ApiConfig(AppConfig):
                     cmauid = row[27]
                     alreadys = Org.objects.filter(name__iexact=name)
                     if len(alreadys) == 0:
-                        created = Org.objects.create(
-                            name=name,
-                            facility_type=facility_type,
-                            authority_name=authority_name,
-                            isced010=isced010,
-                            isced020=isced020,
-                            isced1=isced1,
-                            isced2=isced2,
-                            isced3=isced3,
-                            isced4plus=isced4plus,
-                            olms_status=olms_status,
-                            full_addr=full_addr,
-                            unit=unit,
-                            street_no=street_no,
-                            street_name=street_name,
-                            city=city,
-                            prov_terr=prov_terr,
-                            postal_code=postal_code,
-                            pruid=pruid,
-                            csdname=csdname,
-                            csduid=csduid,
-                            longitude=longitude,
-                            latitude=latitude,
-                            geo_source=geo_source,
-                            provider=provider,
-                            cmaname=cmaname,
-                            cmauid=cmauid,
-                        )
-
+                        try:
+                            created = Org.objects.create(
+                                name=name,
+                                facility_type=facility_type,
+                                authority_name=authority_name,
+                                isced010=isced010,
+                                isced020=isced020,
+                                isced1=isced1,
+                                isced2=isced2,
+                                isced3=isced3,
+                                isced4plus=isced4plus,
+                                olms_status=olms_status,
+                                full_addr=full_addr,
+                                unit=unit,
+                                street_no=street_no,
+                                street_name=street_name,
+                                city=city,
+                                prov_terr=prov_terr,
+                                postal_code=postal_code,
+                                pruid=pruid,
+                                csdname=csdname,
+                                csduid=csduid,
+                                longitude=longitude,
+                                latitude=latitude,
+                                geo_source=geo_source,
+                                provider=provider,
+                                cmaname=cmaname,
+                                cmauid=cmauid,
+                            )
+                        except Exception as create_e:
+                            print(f"unable to create org: {name=}")
 
 
 

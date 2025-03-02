@@ -1,8 +1,6 @@
 import io
-import json
 
 import psycopg2
-from django.db.models import QuerySet
 from django.forms import model_to_dict
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
@@ -11,51 +9,7 @@ from api.models.user_org import UserOrg
 from api.models.org import Org
 from django.http import JsonResponse
 
-from api.serializers.org_serializer import OrgSerializer
 from api.serializers.user_serializers import CreateUserOrgSerializer
-from jitgurup.settings import DATABASES
-
-def reset_tests(request, *args, **kwargs):
-    try:
-        default_db = DATABASES["default"]
-        connection = psycopg2.connect(
-            database=default_db["NAME"],
-            user=default_db["USER"],
-            host=default_db["HOST"],
-            port=default_db["PORT"],
-            password=default_db["PASSWORD"]
-        )
-        cursor = connection.cursor()
-        cursor.execute("truncate api_org")
-        cursor.close()
-        connection.commit()
-        return JsonResponse({
-            "message": "success"
-        }, status=200)
-    except KeyError as ke:
-        return JsonResponse({
-            "message": "failure",
-            "error": f"error connecting to database, db connection details: {ke}"
-        }, status=500)
-    except psycopg2.Error as e:
-        return JsonResponse({
-            "message": "failure",
-            "error": f"{e}"
-        }, status=500)
-
-
-
-
-@api_view(["GET"])
-def org(request, org_id):
-    found = Org.objects.filter(id=org_id).first()
-    if found is not None:
-        return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200)
-    else:
-        return JsonResponse({
-            "message": "no resource found"
-        }, status=404)
-
 
 @api_view(['POST', 'GET', 'PUT', 'DELETE'])
 def orgs(request, *args, **kwargs):
@@ -98,7 +52,6 @@ def orgs(request, *args, **kwargs):
         found.save()
         return JsonResponse(model_to_dict(found), status=200)
 
-
     if request.method == 'POST':
         name: str = request.data.get('name')
         if name:
@@ -130,7 +83,7 @@ def orgs(request, *args, **kwargs):
         name = request.GET.get('name')
         description = request.GET.get('description')
         filtered = False
-        founds = Org.objects.filter(deleted=False)
+        founds = Org.objects.filter(deleted=False).order_by('name')
         if name:
             if len(name.strip()) > 0:
                 filtered = True
@@ -140,9 +93,8 @@ def orgs(request, *args, **kwargs):
                 filtered = True
                 founds = founds.filter(description__icontains=description)
         if not filtered:
-            founds = Org.objects.all()[:10]
+            founds = Org.objects.all().order_by('name')[:10]
         return JsonResponse([model_to_dict(instance) for instance in founds], status=200, safe=False)
-
 
 @api_view(["GET", "POST"])
 def user_orgs(request, *args, **kwargs):

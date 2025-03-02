@@ -3,6 +3,7 @@ from django.db import models
 class Org(models.Model):
     name = models.CharField(max_length=128)
     description = models.TextField(null=True, blank=True)
+    url = models.URLField(blank=True, null=True)
     source_id = models.CharField(max_length=128, null=True, blank=True)
     facility_type = models.CharField(max_length=128, null=True, blank=True)
     authority_name = models.CharField(max_length=128, null=True, blank=True)

@@ -225,8 +225,9 @@ def users(request, *args, **kwargs):
                 found = authenticate(username=username, password=password)
                 if found:
                     user_session = UserSession.objects.create(user=found, session_id=UserSession.generate_uuid())
-                    found['session_id'] = user_session.session_id
-                    return JsonResponse(found, status=201, safe=False)
+                    the_dict = model_to_dict(found)
+                    the_dict['session_id'] = user_session.session_id
+                    return JsonResponse(the_dict, status=201, safe=False)
                 else:
                     return JsonResponse({
                         "message": f"found no User matching creds provided"
