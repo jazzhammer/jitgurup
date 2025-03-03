@@ -8,7 +8,7 @@ from api.models.user_session import UserSession
 from django.forms.models import model_to_dict
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 import psycopg2
 from jitgurup.settings import DATABASES
 from dotenv import load_dotenv
@@ -41,7 +41,7 @@ def user(request, user_id):
         return JsonResponse(model_to_dict(found, fields=[field.name for field in found._meta.fields]), status=200)
 
 @api_view(["POST"])
-def reset_tests(request, *args, **kwargs):
+def reset_tests(request: HttpRequest):
     print("reset_tests(request, *args, **kwargs):")
     try:
         default_db = DATABASES["default"]
@@ -227,7 +227,10 @@ def users(request, *args, **kwargs):
                     user_session = UserSession.objects.create(user=found, session_id=UserSession.generate_uuid())
                     the_dict = model_to_dict(found)
                     the_dict['session_id'] = user_session.session_id
-                    return JsonResponse(the_dict, status=201, safe=False)
+                    try:
+                        return JsonResponse(build_dict(the_dict), status=201, safe=False)
+                    except Exception as found_e:
+                        return JsonResponse({"message": f"error {found_e}"}, status=400, safe=False)
                 else:
                     return JsonResponse({
                         "message": f"found no User matching creds provided"
@@ -374,3 +377,18 @@ def confirmUserOrgs():
 def seed_default_user_orgs(request, *args, **kwargs):
     confirmed = confirmUserOrgs()
     return JsonResponse(confirmed, status=200)
+
+def build_dict(the_dict: dict):
+    groups = the_dict.get('groups')
+    group_dicts = []
+    for group in groups:
+        group_dict = model_to_dict(group)
+        permissions = group_dict.get('permissions')
+        permission_dicts = []
+        for permission in permissions:
+            permission_dict = model_to_dict(permission)
+            permission_dicts.append(permission_dict)
+        group_dict['permissions'] = permission_dicts
+        group_dicts.append(group_dict)
+    the_dict['groups'] = group_dicts
+    return the_dict

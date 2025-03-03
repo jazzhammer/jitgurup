@@ -38,9 +38,8 @@ class ApiConfig(AppConfig):
         self.confirm_default_frequent_questions()
         self.confirm_default_focal_artifact_types()
         self.confirm_animals()
-
-        # self.confirmDefaultPermissions()
-        # self.confirmDefaultGroupPermissions()
+        self.confirmDefaultPermissions()
+        self.confirmDefaultGroupPermissions()
 
     def confirm_default_users(self):
         print(f"confirm_default_users...")
@@ -83,11 +82,12 @@ class ApiConfig(AppConfig):
         ADMIN_FIRST_NAME = os.getenv('ADMIN_FIRST_NAME')
         ADMIN_LAST_NAME = os.getenv('ADMIN_LAST_NAME')
         ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')
+        ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
 
         try:
             found = User.objects.filter(username=ADMIN_USERNAME).first()
             if found is None:
-                created = User.objects.create_user(ADMIN_USERNAME, "tio.a@tacteonltd.com", ADMIN_PASSWORD)
+                created = User.objects.create_user(ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD)
                 if created is not None:
                     print(f"created admin user: {created.username}")
                     created.is_superuser = True
@@ -1722,6 +1722,7 @@ class ApiConfig(AppConfig):
         try:
             admins = Group.objects.filter(name="admins").first()
             admin = User.objects.filter(username="jitguruadmin").first()
+            admin2 = User.objects.filter(username="admin").first()
 
             assign_org_to_self = Permission.objects.filter(codename="assign_org_to_self").first()
             add_org = Permission.objects.filter(codename="add_org").first()
@@ -1732,6 +1733,7 @@ class ApiConfig(AppConfig):
             admins.permissions.add(add_facility)
 
             admin.groups.add(admins)
+            admin2.groups.add(admins)
         except Exception as e:
             print(f"unable to conrirm default group permissions: {e}")
 
